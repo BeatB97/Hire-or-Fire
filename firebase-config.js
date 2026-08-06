@@ -5,13 +5,13 @@
 // ============================================================
 
 const firebaseConfig = {
-  apiKey: "INCOLLA_QUI_apiKey",
-  authDomain: "INCOLLA_QUI_authDomain",
-  databaseURL: "INCOLLA_QUI_databaseURL", // fondamentale: es. https://tuoprogetto-default-rtdb.europe-west1.firebasedatabase.app
-  projectId: "INCOLLA_QUI_projectId",
-  storageBucket: "INCOLLA_QUI_storageBucket",
-  messagingSenderId: "INCOLLA_QUI_messagingSenderId",
-  appId: "INCOLLA_QUI_appId"
+  apiKey: "AIzaSyAcRiwUleIbsnu7Ceh6z6H_z4wd0vR5taA",
+  authDomain: "jobor26-29f54.firebaseapp.com",
+  databaseURL: "https://jobor26-29f54-default-rtdb.europe-west1.firebasedatabase.app", // fondamentale: es. https://tuoprogetto-default-rtdb.europe-west1.firebasedatabase.app
+  projectId: "jobor26-29f54",
+  storageBucket: "jobor26-29f54.firebasestorage.app",
+  messagingSenderId: "580061601874",
+  appId: "1:580061601874:web:bf768cbecc7adf5c90bf8b"
 };
 
 firebase.initializeApp(firebaseConfig);
