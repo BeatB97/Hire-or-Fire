@@ -3,25 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Chi Assumeresti? — Studente</title>
+<title>Hire or Fire? — Studente</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="app">
 
   <div class="brand">
-    <span class="stamp-icon">FASCICOLO</span>
-    <h1>Chi Assumeresti?</h1>
+    <span class="stamp-icon"><img src="img/logo-eurointerim.png" alt="Eurointerim"></span>
+    <h1>Hire or Fire?</h1>
   </div>
 
   <!-- SCHERMATA 1: accesso alla stanza -->
   <div id="joinScreen" class="setup-box">
-    <label for="roomInput">Codice stanza (dato dal docente)</label>
-    <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Mono',monospace;">
+    <div id="roomFieldWrap">
+      <label for="roomInput">Codice stanza (dato dal docente)</label>
+      <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Mono',monospace;">
+    </div>
+    <p id="prefilledRoomHint" style="display:none; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brand-dark); margin-top:-6px; margin-bottom:16px;">Stanza <b id="prefilledRoomCode"></b> — scansionata dal QR code</p>
     <label for="nameInput">Il tuo nome (facoltativo, resta anonimo se lo lasci vuoto)</label>
     <input id="nameInput" type="text" maxlength="24" placeholder="Nickname" autocomplete="off">
     <button class="control-btn primary" style="width:100%;" onclick="joinRoom()">Entra nella stanza</button>
     <p id="joinError" style="color:#ef7a72; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-top:12px; display:none;"></p>
+  </div>
+
+  <!-- SCHERMATA 1bis: in attesa che il docente avvii il gioco -->
+  <div id="waitingStartScreen" style="display:none;" class="status-panel">
+    <div class="big">Sei connesso alla stanza <span id="waitingRoomLabel"></span></div>
+    In attesa che il docente avvii il gioco…
   </div>
 
   <!-- SCHERMATA 2: votazione -->
@@ -68,7 +77,7 @@
     <div id="resultsList" class="results-list"></div>
   </div>
 
-  <p class="footer-note">Attività didattica · i dati restano nella tua stanza Firebase</p>
+  <p class="footer-note"></p>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -86,8 +95,18 @@ if (!STUDENT_ID) {
 let currentIndex = null;
 let votedForCurrentIndex = false;
 
+// Se il QR code contiene già il codice stanza (?room=XXXXX), nascondiamo
+// il campo "codice stanza" e chiediamo solo il nickname.
+const urlParams = new URLSearchParams(window.location.search);
+const prefilledRoom = urlParams.get('room') ? urlParams.get('room').toUpperCase() : null;
+if (prefilledRoom) {
+  document.getElementById('roomFieldWrap').style.display = 'none';
+  document.getElementById('prefilledRoomHint').style.display = 'block';
+  document.getElementById('prefilledRoomCode').textContent = prefilledRoom;
+}
+
 function joinRoom(){
-  const code = document.getElementById('roomInput').value.trim().toUpperCase();
+  const code = prefilledRoom || document.getElementById('roomInput').value.trim().toUpperCase();
   const name = document.getElementById('nameInput').value.trim();
   const errEl = document.getElementById('joinError');
   errEl.style.display = 'none';
@@ -106,9 +125,10 @@ function joinRoom(){
     }
     ROOM = code;
     document.getElementById('roomLabel').textContent = ROOM;
+    document.getElementById('waitingRoomLabel').textContent = ROOM;
     if (name) db.ref(`sessions/${ROOM}/students/${STUDENT_ID}`).set(name);
     document.getElementById('joinScreen').style.display = 'none';
-    document.getElementById('voteScreen').style.display = 'block';
+    document.getElementById('waitingStartScreen').style.display = 'block';
     listenToRoom();
   }).catch(e => {
     errEl.textContent = 'Errore di connessione: ' + e.message;
@@ -128,6 +148,13 @@ function listenToRoom(){
       return;
     }
 
+    if (!data.started) {
+      document.getElementById('waitingStartScreen').style.display = 'block';
+      document.getElementById('voteScreen').style.display = 'none';
+      document.getElementById('resultsScreen').style.display = 'none';
+      return;
+    }
+
     const idx = data.currentIndex || 0;
     if (idx !== currentIndex) {
       currentIndex = idx;
@@ -139,11 +166,12 @@ function listenToRoom(){
 
 function renderCard(idx){
   const card = CARDS[idx];
+  document.getElementById('waitingStartScreen').style.display = 'none';
   document.getElementById('resultsScreen').style.display = 'none';
   document.getElementById('voteScreen').style.display = 'block';
   document.getElementById('cardProgress').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
   document.getElementById('cardImg').src = card.img;
-  document.getElementById('cardName').innerHTML = `${card.name} <span>${card.age}</span>`;
+  document.getElementById('cardName').innerHTML = `Candidato ${idx+1}`;
   document.getElementById('cardPosition').textContent = card.position;
   document.getElementById('cardQuoteLabel').textContent = card.quoteLabel;
   document.getElementById('cardQuote').textContent = card.quote;
@@ -205,7 +233,7 @@ function showResults(votesData){
     row.className = 'result-row';
     row.innerHTML = `
       <div class="rr-head">
-        <span>${card.name}, ${card.age}</span>
+        <span>Candidato ${idx+1}</span>
         <span class="rr-total">${total} voti</span>
       </div>
       <div class="bar-track">

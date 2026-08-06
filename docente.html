@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chi Assumeresti? — Regia Docente</title>
+<title>Hire or Fire? — Regia Docente</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="app" style="max-width:640px;">
 
   <div class="brand">
-    <span class="stamp-icon">REGIA</span>
-    <h1>Chi Assumeresti? — Docente</h1>
+    <span class="stamp-icon"><img src="img/logo-eurointerim.png" alt="Eurointerim"></span>
+    <h1>Hire or Fire? — Docente</h1>
   </div>
 
   <!-- SCHERMATA 1: crea/apri stanza -->
@@ -30,7 +30,7 @@
     <div class="setup-box">
       <div class="room-code-display">
         <div class="code" id="roomCodeBig">—</div>
-        <div class="hint">Gli studenti aprono STUDENTE.html e inseriscono questo codice</div>
+        <div class="hint">Scansionando il QR gli studenti entrano subito (solo nickname). In alternativa possono aprire STUDENTE.html e digitare questo codice.</div>
       </div>
       <div id="qrWrap" style="text-align:center; margin:14px 0;"></div>
       <div class="response-count" id="joinedCount">0 studenti collegati</div>
@@ -80,7 +80,7 @@
     <button class="control-btn" style="width:100%; margin-top:14px;" onclick="backToPresentation()">← Torna alla proiezione</button>
   </div>
 
-  <p class="footer-note">Regia docente · avanza tu i fascicoli, gli schermi degli studenti si aggiornano da soli</p>
+  <p class="footer-note"></p>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -103,6 +103,7 @@ function createRoom(){
   db.ref('sessions/' + ROOM).set({
     meta: { createdAt: Date.now() },
     currentIndex: 0,
+    started: false,
     revealed: false
   }).then(() => enterLobby());
 }
@@ -122,7 +123,7 @@ function enterLobby(){
   document.getElementById('lobbyScreen').style.display = 'block';
   document.getElementById('roomCodeBig').textContent = ROOM;
 
-  const studentUrl = location.href.replace(/docente\.html.*$/, 'studente.html');
+  const studentUrl = location.href.replace(/docente\.html.*$/, 'studente.html') + '?room=' + ROOM;
   document.getElementById('qrWrap').innerHTML =
     `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(studentUrl)}" alt="QR code" style="border-radius:8px;">`;
 
@@ -137,6 +138,7 @@ function startPresentation(){
   document.getElementById('presentScreen').style.display = 'block';
   document.getElementById('roomLabel2').textContent = ROOM;
   currentIndex = 0;
+  db.ref(`sessions/${ROOM}/started`).set(true);
   pushCurrentIndex();
   listenResponses();
 }
@@ -145,7 +147,7 @@ function renderCard2(idx){
   const card = CARDS[idx];
   document.getElementById('cardProgress2').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
   document.getElementById('cardImg2').src = card.img;
-  document.getElementById('cardName2').innerHTML = `${card.name} <span>${card.age}</span>`;
+  document.getElementById('cardName2').innerHTML = `Candidato ${idx+1}`;
   document.getElementById('cardPosition2').textContent = card.position;
   document.getElementById('cardQuoteLabel2').textContent = card.quoteLabel;
   document.getElementById('cardQuote2').textContent = card.quote;
@@ -214,7 +216,7 @@ function showResults2(votesData){
     row.className = 'result-row';
     row.innerHTML = `
       <div class="rr-head">
-        <span>${card.name}, ${card.age} — ${card.position}</span>
+        <span>Candidato ${idx+1} — ${card.position}</span>
         <span class="rr-total">${total} voti</span>
       </div>
       <div class="bar-track">
