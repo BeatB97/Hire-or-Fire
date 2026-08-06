@@ -43,7 +43,6 @@
     <div class="folder">
       <div class="photo-wrap" style="position:relative;">
         <img id="cardImg" src="" alt="">
-        <div class="name-tag" id="cardName"></div>
         <div class="stamp-overlay" id="stampOverlay">
           <div class="stamp-mark" id="stampMark"></div>
         </div>
@@ -171,7 +170,6 @@ function renderCard(idx){
   document.getElementById('voteScreen').style.display = 'block';
   document.getElementById('cardProgress').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
   document.getElementById('cardImg').src = card.img;
-  document.getElementById('cardName').innerHTML = `Candidato ${idx+1}`;
   document.getElementById('cardPosition').textContent = card.position;
   document.getElementById('cardQuoteLabel').textContent = card.quoteLabel;
   document.getElementById('cardQuote').textContent = card.quote;

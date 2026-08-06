@@ -48,7 +48,6 @@
     <div class="folder">
       <div class="photo-wrap">
         <img id="cardImg2" src="" alt="">
-        <div class="name-tag" id="cardName2"></div>
       </div>
       <div class="dossier-body">
         <div class="field">
@@ -147,7 +146,6 @@ function renderCard2(idx){
   const card = CARDS[idx];
   document.getElementById('cardProgress2').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
   document.getElementById('cardImg2').src = card.img;
-  document.getElementById('cardName2').innerHTML = `Candidato ${idx+1}`;
   document.getElementById('cardPosition2').textContent = card.position;
   document.getElementById('cardQuoteLabel2').textContent = card.quoteLabel;
   document.getElementById('cardQuote2').textContent = card.quote;
