@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chi Assumeresti? — Regia Docente</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" style="max-width:640px;">
+
+  <div class="brand">
+    <span class="stamp-icon">REGIA</span>
+    <h1>Chi Assumeresti? — Docente</h1>
+  </div>
+
+  <!-- SCHERMATA 1: crea/apri stanza -->
+  <div id="setupScreen" class="setup-box">
+    <p style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:#c9c0a8; margin-top:0;">
+      Crea una nuova stanza oppure riprendi una stanza già aperta in precedenza.
+    </p>
+    <button class="control-btn primary" style="width:100%; margin-bottom:14px;" onclick="createRoom()">Crea nuova stanza</button>
+    <label for="resumeInput">…oppure riprendi stanza esistente</label>
+    <input id="resumeInput" type="text" maxlength="5" placeholder="Codice stanza" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Mono',monospace;">
+    <button class="control-btn" style="width:100%;" onclick="resumeRoom()">Riprendi</button>
+  </div>
+
+  <!-- SCHERMATA 2: sala d'attesa / codice stanza -->
+  <div id="lobbyScreen" style="display:none;">
+    <div class="setup-box">
+      <div class="room-code-display">
+        <div class="code" id="roomCodeBig">—</div>
+        <div class="hint">Gli studenti aprono STUDENTE.html e inseriscono questo codice</div>
+      </div>
+      <div id="qrWrap" style="text-align:center; margin:14px 0;"></div>
+      <div class="response-count" id="joinedCount">0 studenti collegati</div>
+      <button class="control-btn primary" style="width:100%; margin-top:16px;" onclick="startPresentation()">Inizia proiezione fascicolo 1</button>
+    </div>
+  </div>
+
+  <!-- SCHERMATA 3: regia presentazione -->
+  <div id="presentScreen" style="display:none;">
+    <div class="toolbar">
+      <span class="progress">STANZA <b id="roomLabel2"></b></span>
+      <span class="progress" id="cardProgress2"></span>
+    </div>
+
+    <div class="folder">
+      <div class="photo-wrap">
+        <img id="cardImg2" src="" alt="">
+        <div class="name-tag" id="cardName2"></div>
+      </div>
+      <div class="dossier-body">
+        <div class="field">
+          <span class="label">Posizione desiderata</span>
+          <span class="value" id="cardPosition2"></span>
+        </div>
+        <div class="quote-block">
+          <span class="label" id="cardQuoteLabel2"></span>
+          <p id="cardQuote2"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="response-count">
+      <b id="respCount">0</b> risposte ricevute per questo fascicolo — <span style="color:#6b6656;">risultati nascosti finché non li sblocchi</span>
+    </div>
+
+    <div class="nav-row">
+      <button class="control-btn" id="prevBtn" onclick="changeCard(-1)">← Precedente</button>
+      <button class="control-btn" id="nextBtn" onclick="changeCard(1)">Successivo →</button>
+    </div>
+    <button class="control-btn primary" style="width:100%; margin-top:12px;" onclick="revealResults()">🔓 Sblocca e mostra i risultati finali</button>
+  </div>
+
+  <!-- SCHERMATA 4: risultati -->
+  <div id="resultsScreen2" style="display:none;">
+    <div class="status-panel"><div class="big">Risultati finali — Discussione</div>Proietta questa schermata alla classe.</div>
+    <div id="resultsList2" class="results-list"></div>
+    <button class="control-btn" style="width:100%; margin-top:14px;" onclick="backToPresentation()">← Torna alla proiezione</button>
+  </div>
+
+  <p class="footer-note">Regia docente · avanza tu i fascicoli, gli schermi degli studenti si aggiornano da soli</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="cards-data.js"></script>
+<script>
+let ROOM = null;
+let currentIndex = 0;
+
+function randomCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i=0;i<5;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+function createRoom(){
+  ROOM = randomCode();
+  db.ref('sessions/' + ROOM).set({
+    meta: { createdAt: Date.now() },
+    currentIndex: 0,
+    revealed: false
+  }).then(() => enterLobby());
+}
+
+function resumeRoom(){
+  const code = document.getElementById('resumeInput').value.trim().toUpperCase();
+  if (!code) return;
+  db.ref('sessions/' + code + '/meta').once('value').then(snap => {
+    if (!snap.exists()) { alert('Nessuna stanza trovata con questo codice.'); return; }
+    ROOM = code;
+    enterLobby();
+  });
+}
+
+function enterLobby(){
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('lobbyScreen').style.display = 'block';
+  document.getElementById('roomCodeBig').textContent = ROOM;
+
+  const studentUrl = location.href.replace(/docente\.html.*$/, 'studente.html');
+  document.getElementById('qrWrap').innerHTML =
+    `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(studentUrl)}" alt="QR code" style="border-radius:8px;">`;
+
+  db.ref(`sessions/${ROOM}/students`).on('value', snap => {
+    const n = snap.exists() ? Object.keys(snap.val()).length : 0;
+    document.getElementById('joinedCount').textContent = n + ' studenti con nickname registrato';
+  });
+}
+
+function startPresentation(){
+  document.getElementById('lobbyScreen').style.display = 'none';
+  document.getElementById('presentScreen').style.display = 'block';
+  document.getElementById('roomLabel2').textContent = ROOM;
+  currentIndex = 0;
+  pushCurrentIndex();
+  listenResponses();
+}
+
+function renderCard2(idx){
+  const card = CARDS[idx];
+  document.getElementById('cardProgress2').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
+  document.getElementById('cardImg2').src = card.img;
+  document.getElementById('cardName2').innerHTML = `${card.name} <span>${card.age}</span>`;
+  document.getElementById('cardPosition2').textContent = card.position;
+  document.getElementById('cardQuoteLabel2').textContent = card.quoteLabel;
+  document.getElementById('cardQuote2').textContent = card.quote;
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === CARDS.length - 1;
+}
+
+function pushCurrentIndex(){
+  renderCard2(currentIndex);
+  db.ref(`sessions/${ROOM}/currentIndex`).set(currentIndex);
+}
+
+function changeCard(delta){
+  const next = currentIndex + delta;
+  if (next < 0 || next >= CARDS.length) return;
+  currentIndex = next;
+  pushCurrentIndex();
+}
+
+function listenResponses(){
+  db.ref(`sessions/${ROOM}/votes`).on('value', snap => {
+    const data = snap.val() || {};
+    const count = data[currentIndex] ? Object.keys(data[currentIndex]).length : 0;
+    document.getElementById('respCount').textContent = count;
+  });
+  // Re-check count whenever the projected card changes
+  const originalPush = pushCurrentIndex;
+  pushCurrentIndex = function(){
+    originalPush();
+    db.ref(`sessions/${ROOM}/votes`).once('value').then(snap => {
+      const data = snap.val() || {};
+      const count = data[currentIndex] ? Object.keys(data[currentIndex]).length : 0;
+      document.getElementById('respCount').textContent = count;
+    });
+  };
+}
+
+function revealResults(){
+  db.ref(`sessions/${ROOM}/revealed`).set(true);
+  db.ref(`sessions/${ROOM}/votes`).once('value').then(snap => {
+    showResults2(snap.val() || {});
+  });
+}
+
+function backToPresentation(){
+  db.ref(`sessions/${ROOM}/revealed`).set(false);
+  document.getElementById('resultsScreen2').style.display = 'none';
+  document.getElementById('presentScreen').style.display = 'block';
+}
+
+function showResults2(votesData){
+  document.getElementById('presentScreen').style.display = 'none';
+  document.getElementById('resultsScreen2').style.display = 'block';
+  const list = document.getElementById('resultsList2');
+  list.innerHTML = '';
+
+  CARDS.forEach((card, idx) => {
+    const votes = votesData[idx] ? Object.values(votesData[idx]) : [];
+    const matchCount = votes.filter(v => v === 'match').length;
+    const skipCount = votes.filter(v => v === 'skip').length;
+    const total = matchCount + skipCount;
+    const matchPct = total ? Math.round((matchCount/total)*100) : 0;
+    const skipPct = total ? 100 - matchPct : 0;
+
+    const row = document.createElement('div');
+    row.className = 'result-row';
+    row.innerHTML = `
+      <div class="rr-head">
+        <span>${card.name}, ${card.age} — ${card.position}</span>
+        <span class="rr-total">${total} voti</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-match" style="width:${matchPct}%"></div>
+        <div class="bar-skip" style="width:${skipPct}%"></div>
+      </div>
+      <div class="bar-labels">
+        <span>♥ MATCH ${matchPct}% (${matchCount})</span>
+        <span>SKIP ${skipPct}% (${skipCount}) ✕</span>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+</script>
+</body>
+</html>

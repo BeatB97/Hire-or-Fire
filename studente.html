@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Chi Assumeresti? — Studente</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="brand">
+    <span class="stamp-icon">FASCICOLO</span>
+    <h1>Chi Assumeresti?</h1>
+  </div>
+
+  <!-- SCHERMATA 1: accesso alla stanza -->
+  <div id="joinScreen" class="setup-box">
+    <label for="roomInput">Codice stanza (dato dal docente)</label>
+    <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Mono',monospace;">
+    <label for="nameInput">Il tuo nome (facoltativo, resta anonimo se lo lasci vuoto)</label>
+    <input id="nameInput" type="text" maxlength="24" placeholder="Nickname" autocomplete="off">
+    <button class="control-btn primary" style="width:100%;" onclick="joinRoom()">Entra nella stanza</button>
+    <p id="joinError" style="color:#ef7a72; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-top:12px; display:none;"></p>
+  </div>
+
+  <!-- SCHERMATA 2: votazione -->
+  <div id="voteScreen" style="display:none;">
+    <div class="folder-tab">
+      <span>STANZA <b id="roomLabel">—</b></span>
+      <span id="cardProgress">—</span>
+    </div>
+
+    <div class="folder">
+      <div class="photo-wrap" style="position:relative;">
+        <img id="cardImg" src="" alt="">
+        <div class="name-tag" id="cardName"></div>
+        <div class="stamp-overlay" id="stampOverlay">
+          <div class="stamp-mark" id="stampMark"></div>
+        </div>
+      </div>
+      <div class="dossier-body">
+        <div class="field">
+          <span class="label">Posizione desiderata</span>
+          <span class="value" id="cardPosition"></span>
+        </div>
+        <div class="quote-block">
+          <span class="label" id="cardQuoteLabel"></span>
+          <p id="cardQuote"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="stamp-btn skip" id="skipBtn" onclick="vote('skip')">✕ SKIP</button>
+      <button class="stamp-btn match" id="matchBtn" onclick="vote('match')">♥ MATCH</button>
+    </div>
+
+    <div id="waitStatus" class="status-panel" style="display:none;">
+      <div class="big">Voto registrato</div>
+      In attesa del prossimo fascicolo, tenuto dal docente…
+    </div>
+  </div>
+
+  <!-- SCHERMATA 3: risultati finali -->
+  <div id="resultsScreen" style="display:none;">
+    <div class="status-panel"><div class="big">Discussione finale</div>Ecco come ha votato tutta la classe:</div>
+    <div id="resultsList" class="results-list"></div>
+  </div>
+
+  <p class="footer-note">Attività didattica · i dati restano nella tua stanza Firebase</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="cards-data.js"></script>
+<script>
+let ROOM = null;
+let STUDENT_ID = localStorage.getItem('studentId');
+if (!STUDENT_ID) {
+  STUDENT_ID = 'stu_' + Math.random().toString(36).slice(2, 10);
+  localStorage.setItem('studentId', STUDENT_ID);
+}
+
+let currentIndex = null;
+let votedForCurrentIndex = false;
+
+function joinRoom(){
+  const code = document.getElementById('roomInput').value.trim().toUpperCase();
+  const name = document.getElementById('nameInput').value.trim();
+  const errEl = document.getElementById('joinError');
+  errEl.style.display = 'none';
+
+  if (!code) {
+    errEl.textContent = 'Inserisci il codice stanza fornito dal docente.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  db.ref('sessions/' + code + '/meta').once('value').then(snap => {
+    if (!snap.exists()) {
+      errEl.textContent = 'Nessuna stanza trovata con questo codice. Controlla con il docente.';
+      errEl.style.display = 'block';
+      return;
+    }
+    ROOM = code;
+    document.getElementById('roomLabel').textContent = ROOM;
+    if (name) db.ref(`sessions/${ROOM}/students/${STUDENT_ID}`).set(name);
+    document.getElementById('joinScreen').style.display = 'none';
+    document.getElementById('voteScreen').style.display = 'block';
+    listenToRoom();
+  }).catch(e => {
+    errEl.textContent = 'Errore di connessione: ' + e.message;
+    errEl.style.display = 'block';
+  });
+}
+
+function listenToRoom(){
+  const sessionRef = db.ref('sessions/' + ROOM);
+
+  sessionRef.on('value', snap => {
+    const data = snap.val();
+    if (!data) return;
+
+    if (data.revealed) {
+      showResults(data.votes || {});
+      return;
+    }
+
+    const idx = data.currentIndex || 0;
+    if (idx !== currentIndex) {
+      currentIndex = idx;
+      renderCard(idx);
+      checkIfAlreadyVoted(idx);
+    }
+  });
+}
+
+function renderCard(idx){
+  const card = CARDS[idx];
+  document.getElementById('resultsScreen').style.display = 'none';
+  document.getElementById('voteScreen').style.display = 'block';
+  document.getElementById('cardProgress').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
+  document.getElementById('cardImg').src = card.img;
+  document.getElementById('cardName').innerHTML = `${card.name} <span>${card.age}</span>`;
+  document.getElementById('cardPosition').textContent = card.position;
+  document.getElementById('cardQuoteLabel').textContent = card.quoteLabel;
+  document.getElementById('cardQuote').textContent = card.quote;
+  document.getElementById('stampOverlay').classList.remove('show');
+  document.getElementById('waitStatus').style.display = 'none';
+  setButtonsEnabled(true);
+}
+
+function checkIfAlreadyVoted(idx){
+  db.ref(`sessions/${ROOM}/votes/${idx}/${STUDENT_ID}`).once('value').then(snap => {
+    if (snap.exists()) {
+      votedForCurrentIndex = true;
+      setButtonsEnabled(false);
+      document.getElementById('waitStatus').style.display = 'block';
+    } else {
+      votedForCurrentIndex = false;
+    }
+  });
+}
+
+function setButtonsEnabled(enabled){
+  document.getElementById('skipBtn').disabled = !enabled;
+  document.getElementById('matchBtn').disabled = !enabled;
+}
+
+function vote(choice){
+  if (votedForCurrentIndex || currentIndex === null) return;
+  votedForCurrentIndex = true;
+  setButtonsEnabled(false);
+
+  db.ref(`sessions/${ROOM}/votes/${currentIndex}/${STUDENT_ID}`).set(choice);
+
+  const overlay = document.getElementById('stampOverlay');
+  const mark = document.getElementById('stampMark');
+  mark.textContent = choice === 'match' ? 'MATCH ♥' : 'SKIP ✕';
+  mark.className = 'stamp-mark ' + (choice === 'match' ? 'approve' : 'reject');
+  overlay.classList.add('show');
+
+  setTimeout(() => {
+    document.getElementById('waitStatus').style.display = 'block';
+  }, 500);
+}
+
+function showResults(votesData){
+  document.getElementById('voteScreen').style.display = 'none';
+  document.getElementById('resultsScreen').style.display = 'block';
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '';
+
+  CARDS.forEach((card, idx) => {
+    const votes = votesData[idx] ? Object.values(votesData[idx]) : [];
+    const matchCount = votes.filter(v => v === 'match').length;
+    const skipCount = votes.filter(v => v === 'skip').length;
+    const total = matchCount + skipCount;
+    const matchPct = total ? Math.round((matchCount/total)*100) : 0;
+    const skipPct = total ? 100 - matchPct : 0;
+
+    const row = document.createElement('div');
+    row.className = 'result-row';
+    row.innerHTML = `
+      <div class="rr-head">
+        <span>${card.name}, ${card.age}</span>
+        <span class="rr-total">${total} voti</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-match" style="width:${matchPct}%"></div>
+        <div class="bar-skip" style="width:${skipPct}%"></div>
+      </div>
+      <div class="bar-labels">
+        <span>♥ MATCH ${matchPct}% (${matchCount})</span>
+        <span>SKIP ${skipPct}% (${skipCount}) ✕</span>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+</script>
+</body>
+</html>
