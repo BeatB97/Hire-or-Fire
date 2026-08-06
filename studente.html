@@ -11,20 +11,20 @@
 
   <div class="brand">
     <span class="stamp-icon"><img src="img/logo-eurointerim.png" alt="Eurointerim"></span>
-    <h1>Hire or Fire?</h1>
+    <h1 class="hero-title">Hire or Fire? <span class="fire">🔥</span></h1>
   </div>
 
   <!-- SCHERMATA 1: accesso alla stanza -->
   <div id="joinScreen" class="setup-box">
     <div id="roomFieldWrap">
       <label for="roomInput">Codice stanza (dato dal docente)</label>
-      <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Mono',monospace;">
+      <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Sans',sans-serif;">
     </div>
-    <p id="prefilledRoomHint" style="display:none; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brand-dark); margin-top:-6px; margin-bottom:16px;">Stanza <b id="prefilledRoomCode"></b> — scansionata dal QR code</p>
+    <p id="prefilledRoomHint" style="display:none; font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--brand-dark); margin-top:-6px; margin-bottom:16px;">Stanza <b id="prefilledRoomCode"></b> — scansionata dal QR code</p>
     <label for="nameInput">Il tuo nome (facoltativo, resta anonimo se lo lasci vuoto)</label>
     <input id="nameInput" type="text" maxlength="24" placeholder="Nickname" autocomplete="off">
     <button class="control-btn primary" style="width:100%;" onclick="joinRoom()">Entra nella stanza</button>
-    <p id="joinError" style="color:#ef7a72; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-top:12px; display:none;"></p>
+    <p id="joinError" style="color:#ef7a72; font-family:'IBM Plex Sans',sans-serif; font-size:12px; margin-top:12px; display:none;"></p>
   </div>
 
   <!-- SCHERMATA 1bis: in attesa che il docente avvii il gioco -->
@@ -93,6 +93,7 @@ if (!STUDENT_ID) {
 
 let currentIndex = null;
 let votedForCurrentIndex = false;
+let CARD_ORDER = CARDS.map((_, i) => i); // ordine di default, sovrascritto dalla stanza
 
 // Se il QR code contiene già il codice stanza (?room=XXXXX), nascondiamo
 // il campo "codice stanza" e chiediamo solo il nickname.
@@ -126,6 +127,9 @@ function joinRoom(){
     document.getElementById('roomLabel').textContent = ROOM;
     document.getElementById('waitingRoomLabel').textContent = ROOM;
     if (name) db.ref(`sessions/${ROOM}/students/${STUDENT_ID}`).set(name);
+    db.ref(`sessions/${ROOM}/cardOrder`).once('value').then(snap => {
+      if (snap.exists()) CARD_ORDER = snap.val();
+    });
     document.getElementById('joinScreen').style.display = 'none';
     document.getElementById('waitingStartScreen').style.display = 'block';
     listenToRoom();
@@ -164,7 +168,7 @@ function listenToRoom(){
 }
 
 function renderCard(idx){
-  const card = CARDS[idx];
+  const card = CARDS[CARD_ORDER[idx]];
   document.getElementById('waitingStartScreen').style.display = 'none';
   document.getElementById('resultsScreen').style.display = 'none';
   document.getElementById('voteScreen').style.display = 'block';
@@ -219,8 +223,9 @@ function showResults(votesData){
   const list = document.getElementById('resultsList');
   list.innerHTML = '';
 
-  CARDS.forEach((card, idx) => {
-    const votes = votesData[idx] ? Object.values(votesData[idx]) : [];
+  CARD_ORDER.forEach((cardIdx, position) => {
+    const card = CARDS[cardIdx];
+    const votes = votesData[position] ? Object.values(votesData[position]) : [];
     const matchCount = votes.filter(v => v === 'match').length;
     const skipCount = votes.filter(v => v === 'skip').length;
     const total = matchCount + skipCount;
@@ -231,7 +236,7 @@ function showResults(votesData){
     row.className = 'result-row';
     row.innerHTML = `
       <div class="rr-head">
-        <span>Candidato ${idx+1}</span>
+        <span>${card.name}</span>
         <span class="rr-total">${total} voti</span>
       </div>
       <div class="bar-track">

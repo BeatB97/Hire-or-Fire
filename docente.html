@@ -11,17 +11,17 @@
 
   <div class="brand">
     <span class="stamp-icon"><img src="img/logo-eurointerim.png" alt="Eurointerim"></span>
-    <h1>Hire or Fire? — Docente</h1>
+    <h1 class="hero-title">Hire or Fire? <span class="fire">🔥</span></h1>
   </div>
 
   <!-- SCHERMATA 1: crea/apri stanza -->
   <div id="setupScreen" class="setup-box">
-    <p style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:#c9c0a8; margin-top:0;">
+    <p style="font-family:'IBM Plex Sans',sans-serif; font-size:12.5px; color:var(--ink-soft); margin-top:0;">
       Crea una nuova stanza oppure riprendi una stanza già aperta in precedenza.
     </p>
     <button class="control-btn primary" style="width:100%; margin-bottom:14px;" onclick="createRoom()">Crea nuova stanza</button>
     <label for="resumeInput">…oppure riprendi stanza esistente</label>
-    <input id="resumeInput" type="text" maxlength="5" placeholder="Codice stanza" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Mono',monospace;">
+    <input id="resumeInput" type="text" maxlength="5" placeholder="Codice stanza" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Sans',sans-serif;">
     <button class="control-btn" style="width:100%;" onclick="resumeRoom()">Riprendi</button>
   </div>
 
@@ -74,7 +74,7 @@
 
   <!-- SCHERMATA 4: risultati -->
   <div id="resultsScreen2" style="display:none;">
-    <div class="status-panel"><div class="big">Risultati finali — Discussione</div>Proietta questa schermata alla classe.</div>
+    <div class="status-panel"><div class="big">Risultati finali — Discussione</div></div>
     <div id="resultsList2" class="results-list"></div>
     <button class="control-btn" style="width:100%; margin-top:14px;" onclick="backToPresentation()">← Torna alla proiezione</button>
   </div>
@@ -89,6 +89,7 @@
 <script>
 let ROOM = null;
 let currentIndex = 0;
+let CARD_ORDER = CARDS.map((_, i) => i); // ordine di default, sovrascritto per ogni stanza
 
 function randomCode(){
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -97,11 +98,22 @@ function randomCode(){
   return code;
 }
 
+function shuffledOrder(n){
+  const arr = Array.from({length: n}, (_, i) => i);
+  for (let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function createRoom(){
   ROOM = randomCode();
+  const order = shuffledOrder(CARDS.length);
   db.ref('sessions/' + ROOM).set({
     meta: { createdAt: Date.now() },
     currentIndex: 0,
+    cardOrder: order,
     started: false,
     revealed: false
   }).then(() => enterLobby());
@@ -121,6 +133,10 @@ function enterLobby(){
   document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('lobbyScreen').style.display = 'block';
   document.getElementById('roomCodeBig').textContent = ROOM;
+
+  db.ref(`sessions/${ROOM}/cardOrder`).once('value').then(snap => {
+    if (snap.exists()) CARD_ORDER = snap.val();
+  });
 
   const studentUrl = location.href.replace(/docente\.html.*$/, 'studente.html') + '?room=' + ROOM;
   document.getElementById('qrWrap').innerHTML =
@@ -143,7 +159,7 @@ function startPresentation(){
 }
 
 function renderCard2(idx){
-  const card = CARDS[idx];
+  const card = CARDS[CARD_ORDER[idx]];
   document.getElementById('cardProgress2').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
   document.getElementById('cardImg2').src = card.img;
   document.getElementById('cardPosition2').textContent = card.position;
@@ -202,8 +218,9 @@ function showResults2(votesData){
   const list = document.getElementById('resultsList2');
   list.innerHTML = '';
 
-  CARDS.forEach((card, idx) => {
-    const votes = votesData[idx] ? Object.values(votesData[idx]) : [];
+  CARD_ORDER.forEach((cardIdx, position) => {
+    const card = CARDS[cardIdx];
+    const votes = votesData[position] ? Object.values(votesData[position]) : [];
     const matchCount = votes.filter(v => v === 'match').length;
     const skipCount = votes.filter(v => v === 'skip').length;
     const total = matchCount + skipCount;
@@ -211,19 +228,22 @@ function showResults2(votesData){
     const skipPct = total ? 100 - matchPct : 0;
 
     const row = document.createElement('div');
-    row.className = 'result-row';
+    row.className = 'result-row result-row-with-thumb';
     row.innerHTML = `
-      <div class="rr-head">
-        <span>Candidato ${idx+1} — ${card.position}</span>
-        <span class="rr-total">${total} voti</span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-match" style="width:${matchPct}%"></div>
-        <div class="bar-skip" style="width:${skipPct}%"></div>
-      </div>
-      <div class="bar-labels">
-        <span>♥ MATCH ${matchPct}% (${matchCount})</span>
-        <span>SKIP ${skipPct}% (${skipCount}) ✕</span>
+      <img class="rr-thumb" src="${card.img}" alt="${card.name}">
+      <div class="rr-body">
+        <div class="rr-head">
+          <span>${card.name} — ${card.position}</span>
+          <span class="rr-total">${total} voti</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-match" style="width:${matchPct}%"></div>
+          <div class="bar-skip" style="width:${skipPct}%"></div>
+        </div>
+        <div class="bar-labels">
+          <span>♥ MATCH ${matchPct}% (${matchCount})</span>
+          <span>SKIP ${skipPct}% (${skipCount}) ✕</span>
+        </div>
       </div>`;
     list.appendChild(row);
   });

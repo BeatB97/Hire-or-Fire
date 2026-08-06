@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap');
 
 :root{
   --page-bg: #f4f3ee;      /* bianco sporco */
@@ -8,8 +8,8 @@
   --folder: #ffffff;
   --folder-2: #eef7fc;
   --folder-shadow: #cfe9f6;
-  --ink: #1b2430;
-  --ink-soft: #55606b;
+  --ink: #000000;
+  --ink-soft: #55575a;
   --approve: #3f7d5c;
   --approve-dark: #2c5942;
   --reject: #b33a32;
@@ -52,18 +52,39 @@ html,body{
 }
 .brand .stamp-icon img{
   height: 76px;
+  width: 76px;
+  object-fit: contain;
   display:block;
 }
-.brand h1{
-  font-family:'Anton', sans-serif;
-  font-weight:400;
-  font-size: 32px;
-  letter-spacing:.03em;
+
+/* Titolo "Hire or Fire?" — stile fumetto, gradiente blu, contorno bianco */
+.hero-title{
+  font-family:'Baloo 2', sans-serif;
+  font-weight:800;
+  font-size: 34px;
+  line-height:1;
   margin:0;
-  color: var(--ink);
+  letter-spacing:.01em;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color: transparent;
+  background: linear-gradient(180deg, #7cd8ff 0%, #009bdf 55%, #0570a8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 1.6px #ffffff;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 2px 0 rgba(0,90,130,.25));
 }
+.hero-title .fire{
+  -webkit-text-stroke: 0;
+  font-size: 30px;
+  filter: none;
+  transform: translateY(1px);
+}
+
 .brand .role-tag{
-  font-family:'IBM Plex Mono', monospace;
+  font-family:'IBM Plex Sans', sans-serif;
   font-size:11px;
   color: var(--ink-soft);
   letter-spacing:.08em;
@@ -85,9 +106,10 @@ html,body{
   align-items:center;
   justify-content:space-between;
   padding: 10px 16px;
-  font-family:'IBM Plex Mono', monospace;
-  font-size: 11.5px;
-  letter-spacing:.06em;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:600;
+  font-size: 12px;
+  letter-spacing:.03em;
   border-bottom:1px dashed var(--paper-line);
   background: var(--brand);
   color: #ffffff;
@@ -109,9 +131,10 @@ html,body{
 .dossier-body{ padding: 16px 16px 18px; }
 .field{ margin-bottom:12px; }
 .field .label{
-  font-family:'IBM Plex Mono', monospace;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:600;
   font-size:10.5px;
-  letter-spacing:.1em;
+  letter-spacing:.08em;
   text-transform:uppercase;
   color: var(--brand-dark);
   display:block;
@@ -128,8 +151,8 @@ html,body{
 }
 .quote-block .label{ color: var(--brand-dark); }
 .quote-block p{
-  font-family:'IBM Plex Mono', monospace;
-  font-size: 13px;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-size: 13.5px;
   line-height:1.55;
   color: var(--ink);
   margin: 4px 0 0;
@@ -146,10 +169,10 @@ html,body{
   border:none;
   border-radius: 12px;
   padding: 16px 10px;
-  font-family:'Anton', sans-serif;
-  font-weight:400;
-  font-size: 19px;
-  letter-spacing:.06em;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:700;
+  font-size: 17px;
+  letter-spacing:.02em;
   cursor:pointer;
   display:flex;
   align-items:center;
@@ -190,9 +213,10 @@ html,body{
 }
 .stamp-overlay.show{ opacity:1; }
 .stamp-mark{
-  font-family:'Anton', sans-serif;
-  font-size: 46px;
-  letter-spacing:.08em;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:800;
+  font-size: 38px;
+  letter-spacing:.04em;
   padding: 10px 26px;
   border: 6px solid currentColor;
   border-radius: 10px;
@@ -215,16 +239,17 @@ html,body{
   text-align:center;
   padding: 30px 20px;
   color: var(--ink-soft);
-  font-family:'IBM Plex Mono', monospace;
-  font-size:13px;
-  letter-spacing:.04em;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-size:13.5px;
+  letter-spacing:.01em;
 }
 .status-panel .big{
-  font-family:'Anton', sans-serif;
-  font-size:20px;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:700;
+  font-size:19px;
   color: var(--brand);
   margin-bottom:6px;
-  letter-spacing:.02em;
+  letter-spacing:.01em;
 }
 
 /* ---------- Forms ---------- */
@@ -238,9 +263,10 @@ html,body{
 }
 .setup-box label{
   display:block;
-  font-family:'IBM Plex Mono', monospace;
-  font-size:11px;
-  letter-spacing:.08em;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:600;
+  font-size:11.5px;
+  letter-spacing:.05em;
   text-transform:uppercase;
   color: var(--ink-soft);
   margin-bottom:6px;
@@ -262,14 +288,15 @@ html,body{
   margin: 18px 0;
 }
 .room-code-display .code{
-  font-family:'Anton', sans-serif;
-  font-size: 40px;
-  letter-spacing:.14em;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:800;
+  font-size: 36px;
+  letter-spacing:.1em;
   color: var(--brand);
 }
 .room-code-display .hint{
-  font-family:'IBM Plex Mono', monospace;
-  font-size:11.5px;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-size:12px;
   color: var(--ink-soft);
   margin-top:4px;
 }
@@ -284,17 +311,18 @@ html,body{
   flex-wrap:wrap;
 }
 .progress{
-  font-family:'IBM Plex Mono', monospace;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:600;
   font-size:12.5px;
   color: var(--ink-soft);
 }
 .response-count{
-  font-family:'IBM Plex Mono', monospace;
-  font-size:12px;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-size:12.5px;
   color: var(--ink-soft);
   text-align:center;
   margin-top:12px;
-  letter-spacing:.05em;
+  letter-spacing:.01em;
 }
 .response-count b{ color: var(--brand); }
 
@@ -314,18 +342,36 @@ html,body{
   padding: 12px 14px;
   margin-bottom:10px;
 }
+.result-row.result-row-with-thumb{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding: 10px;
+}
+.rr-thumb{
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  border: 1px solid var(--paper-line);
+}
+.rr-body{ flex:1; min-width:0; }
 .result-row .rr-head{
   display:flex; justify-content:space-between; align-items:baseline;
+  gap:8px;
   margin-bottom:8px;
   font-family:'IBM Plex Sans', sans-serif;
-  font-weight:600;
+  font-weight:700;
   font-size:14px;
   color: var(--ink);
 }
 .result-row .rr-total{
-  font-family:'IBM Plex Mono', monospace;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:500;
   font-size:11px;
   color: var(--ink-soft);
+  white-space:nowrap;
 }
 .bar-track{
   display:flex;
@@ -338,7 +384,8 @@ html,body{
 .bar-skip{ background: linear-gradient(90deg, var(--reject-dark), #d9564c); }
 .bar-labels{
   display:flex; justify-content:space-between;
-  font-family:'IBM Plex Mono', monospace;
+  font-family:'IBM Plex Sans', sans-serif;
+  font-weight:500;
   font-size:11px;
   margin-top:4px;
   color: var(--ink-soft);
@@ -346,13 +393,13 @@ html,body{
 
 .footer-note{
   text-align:center;
-  font-family:'IBM Plex Mono', monospace;
+  font-family:'IBM Plex Sans', sans-serif;
   font-size:10.5px;
   color:#9aa4ab;
   margin-top:22px;
-  letter-spacing:.03em;
+  letter-spacing:.02em;
 }
 
 @media (min-width:600px){
-  .stamp-btn{ font-size:21px; padding:18px 10px; }
+  .stamp-btn{ font-size:19px; padding:18px 10px; }
 }
