@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Hire or Fire? — Studente</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="brand">
+    <span class="stamp-icon"><img src="img/logo-eurointerim.png" alt="Eurointerim"></span>
+    <h1 class="hero-title">Hire or Fire? <span class="fire">🔥</span></h1>
+  </div>
+
+  <!-- SCHERMATA 1: accesso alla stanza -->
+  <div id="joinScreen" class="setup-box">
+    <div id="roomFieldWrap">
+      <label for="roomInput">Codice stanza (dato dal docente)</label>
+      <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Sans',sans-serif;">
+    </div>
+    <p id="prefilledRoomHint" style="display:none; font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--brand-dark); margin-top:-6px; margin-bottom:16px;">Stanza <b id="prefilledRoomCode"></b> — scansionata dal QR code</p>
+    <label for="nameInput">Il tuo nome (facoltativo, resta anonimo se lo lasci vuoto)</label>
+    <input id="nameInput" type="text" maxlength="24" placeholder="Nickname" autocomplete="off">
+    <button class="control-btn primary" style="width:100%;" onclick="joinRoom()">Entra nella stanza</button>
+    <p id="joinError" style="color:#ef7a72; font-family:'IBM Plex Sans',sans-serif; font-size:12px; margin-top:12px; display:none;"></p>
+  </div>
+
+  <!-- SCHERMATA 1bis: in attesa che il docente avvii il gioco -->
+  <div id="waitingStartScreen" style="display:none;" class="status-panel">
+    <div class="big">Sei connesso alla stanza <span id="waitingRoomLabel"></span></div>
+    In attesa che il docente avvii il gioco…
+  </div>
+
+  <!-- SCHERMATA 2: votazione -->
+  <div id="voteScreen" style="display:none;">
+    <div class="folder-tab">
+      <span>STANZA <b id="roomLabel">—</b></span>
+      <span id="cardProgress">—</span>
+    </div>
+
+    <div class="folder">
+      <div class="photo-wrap" style="position:relative;" onclick="openZoom()">
+        <img id="cardImg" src="" alt="">
+        <span class="zoom-hint">🔍 Ingrandisci</span>
+        <div class="stamp-overlay" id="stampOverlay">
+          <div class="stamp-mark" id="stampMark"></div>
+        </div>
+      </div>
+      <div class="dossier-body">
+        <div class="field">
+          <span class="label">Posizione desiderata</span>
+          <span class="value" id="cardPosition"></span>
+        </div>
+        <div class="quote-block">
+          <span class="label" id="cardQuoteLabel"></span>
+          <p id="cardQuote"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions" id="actionsBar">
+      <button class="stamp-btn skip" id="skipBtn" onclick="vote('skip')">✕ SKIP</button>
+      <button class="stamp-btn match" id="matchBtn" onclick="vote('match')">♥ MATCH</button>
+    </div>
+
+    <div id="waitStatus" class="status-panel" style="display:none;">
+      <div class="big">Voto registrato</div>
+      In attesa del prossimo fascicolo, tenuto dal docente…
+    </div>
+  </div>
+
+  <!-- SCHERMATA 3: risultati finali -->
+  <div id="resultsScreen" style="display:none;">
+    <div class="status-panel"><div class="big">Discussione finale</div>Ecco come ha votato tutta la classe:</div>
+    <div id="resultsList" class="results-list"></div>
+  </div>
+
+  <p class="footer-note"></p>
+</div>
+
+<!-- Foto a schermo intero -->
+<div class="lightbox" id="lightbox" onclick="closeZoom()">
+  <img id="lightboxImg" src="" alt="">
+  <span class="close-hint">✕ Chiudi</span>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="cards-data.js"></script>
+<script>
+let ROOM = null;
+let STUDENT_ID = localStorage.getItem('studentId');
+if (!STUDENT_ID) {
+  STUDENT_ID = 'stu_' + Math.random().toString(36).slice(2, 10);
+  localStorage.setItem('studentId', STUDENT_ID);
+}
+
+let currentIndex = null;
+let votedForCurrentIndex = false;
+let CARD_ORDER = CARDS.map((_, i) => i); // ordine di default, sovrascritto dalla stanza
+
+// Se il QR code contiene già il codice stanza (?room=XXXXX), nascondiamo
+// il campo "codice stanza" e chiediamo solo il nickname.
+const urlParams = new URLSearchParams(window.location.search);
+const prefilledRoom = urlParams.get('room') ? urlParams.get('room').toUpperCase() : null;
+if (prefilledRoom) {
+  document.getElementById('roomFieldWrap').style.display = 'none';
+  document.getElementById('prefilledRoomHint').style.display = 'block';
+  document.getElementById('prefilledRoomCode').textContent = prefilledRoom;
+}
+
+function joinRoom(){
+  const code = prefilledRoom || document.getElementById('roomInput').value.trim().toUpperCase();
+  const name = document.getElementById('nameInput').value.trim();
+  const errEl = document.getElementById('joinError');
+  errEl.style.display = 'none';
+
+  if (!code) {
+    errEl.textContent = 'Inserisci il codice stanza fornito dal docente.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  db.ref('sessions/' + code + '/meta').once('value').then(snap => {
+    if (!snap.exists()) {
+      errEl.textContent = 'Nessuna stanza trovata con questo codice. Controlla con il docente.';
+      errEl.style.display = 'block';
+      return;
+    }
+    ROOM = code;
+    document.getElementById('roomLabel').textContent = ROOM;
+    document.getElementById('waitingRoomLabel').textContent = ROOM;
+    if (name) db.ref(`sessions/${ROOM}/students/${STUDENT_ID}`).set(name);
+    db.ref(`sessions/${ROOM}/cardOrder`).once('value').then(snap => {
+      if (snap.exists()) CARD_ORDER = snap.val();
+    });
+    document.getElementById('joinScreen').style.display = 'none';
+    document.getElementById('waitingStartScreen').style.display = 'block';
+    preloadImages();
+    listenToRoom();
+  }).catch(e => {
+    errEl.textContent = 'Errore di connessione: ' + e.message;
+    errEl.style.display = 'block';
+  });
+}
+
+function listenToRoom(){
+  const sessionRef = db.ref('sessions/' + ROOM);
+
+  sessionRef.on('value', snap => {
+    const data = snap.val();
+    if (!data) return;
+
+    if (data.revealed) {
+      showResults(data.votes || {});
+      return;
+    }
+
+    if (!data.started) {
+      setVotingLayout(false);
+      currentIndex = null;
+      document.getElementById('waitingStartScreen').style.display = 'block';
+      document.getElementById('voteScreen').style.display = 'none';
+      document.getElementById('resultsScreen').style.display = 'none';
+      return;
+    }
+
+    const idx = data.currentIndex || 0;
+    if (idx !== currentIndex) {
+      currentIndex = idx;
+      renderCard(idx);
+      checkIfAlreadyVoted(idx);
+    }
+  });
+}
+
+function setVotingLayout(on){
+  document.body.classList.toggle('voting', on);
+  if (!on) closeZoom();
+}
+
+function openZoom(){
+  const src = document.getElementById('cardImg').src;
+  if (!src) return;
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeZoom(){
+  document.getElementById('lightbox').classList.remove('show');
+}
+
+// Mostra il messaggio "Voto registrato" al posto dei pulsanti,
+// così resta tutto visibile senza scorrere.
+function showWaiting(on){
+  document.getElementById('waitStatus').style.display = on ? 'block' : 'none';
+  document.getElementById('actionsBar').style.display = on ? 'none' : 'flex';
+}
+
+// Scarica in anticipo tutte le foto, così i fascicoli compaiono subito sul telefono
+function preloadImages(){
+  CARDS.forEach(c => { const i = new Image(); i.src = c.img; });
+}
+
+function renderCard(idx){
+  setVotingLayout(true);
+  const card = CARDS[CARD_ORDER[idx]];
+  document.getElementById('waitingStartScreen').style.display = 'none';
+  document.getElementById('resultsScreen').style.display = 'none';
+  document.getElementById('voteScreen').style.display = 'block';
+  document.getElementById('cardProgress').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
+  document.getElementById('cardImg').src = card.img;
+  document.getElementById('cardPosition').textContent = card.position;
+  document.getElementById('cardQuoteLabel').textContent = card.quoteLabel;
+  document.getElementById('cardQuote').textContent = card.quote;
+  document.getElementById('cardImg').alt = card.position;
+  document.getElementById('stampOverlay').classList.remove('show');
+  showWaiting(false);
+  closeZoom();
+  setButtonsEnabled(true);
+}
+
+function checkIfAlreadyVoted(idx){
+  db.ref(`sessions/${ROOM}/votes/${idx}/${STUDENT_ID}`).once('value').then(snap => {
+    if (snap.exists()) {
+      votedForCurrentIndex = true;
+      setButtonsEnabled(false);
+      showWaiting(true);
+    } else {
+      votedForCurrentIndex = false;
+    }
+  });
+}
+
+function setButtonsEnabled(enabled){
+  document.getElementById('skipBtn').disabled = !enabled;
+  document.getElementById('matchBtn').disabled = !enabled;
+}
+
+function vote(choice){
+  if (votedForCurrentIndex || currentIndex === null) return;
+  votedForCurrentIndex = true;
+  setButtonsEnabled(false);
+
+  db.ref(`sessions/${ROOM}/votes/${currentIndex}/${STUDENT_ID}`).set(choice);
+
+  const overlay = document.getElementById('stampOverlay');
+  const mark = document.getElementById('stampMark');
+  mark.textContent = choice === 'match' ? 'MATCH ♥' : 'SKIP ✕';
+  mark.className = 'stamp-mark ' + (choice === 'match' ? 'approve' : 'reject');
+  overlay.classList.add('show');
+
+  setTimeout(() => showWaiting(true), 500);
+}
+
+function showResults(votesData){
+  setVotingLayout(false);
+  document.getElementById('voteScreen').style.display = 'none';
+  document.getElementById('resultsScreen').style.display = 'block';
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '';
+
+  CARD_ORDER.forEach((cardIdx, position) => {
+    const card = CARDS[cardIdx];
+    const votes = votesData[position] ? Object.values(votesData[position]) : [];
+    const matchCount = votes.filter(v => v === 'match').length;
+    const skipCount = votes.filter(v => v === 'skip').length;
+    const total = matchCount + skipCount;
+    const matchPct = total ? Math.round((matchCount/total)*100) : 0;
+    const skipPct = total ? 100 - matchPct : 0;
+
+    const row = document.createElement('div');
+    row.className = 'result-row';
+    row.innerHTML = `
+      <div class="rr-head">
+        <span>${card.name}</span>
+        <span class="rr-total">${total} voti</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-match" style="width:${matchPct}%"></div>
+        <div class="bar-skip" style="width:${skipPct}%"></div>
+      </div>
+      <div class="bar-labels">
+        <span>♥ MATCH ${matchPct}% (${matchCount})</span>
+        <span>SKIP ${skipPct}% (${skipCount}) ✕</span>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+</script>
+</body>
+</html>
