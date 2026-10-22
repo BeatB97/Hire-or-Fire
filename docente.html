@@ -4,24 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hire or Fire? — Regia Docente</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <div class="app" style="max-width:640px;">
 
   <div class="brand">
-    <span class="stamp-icon"><img src="img/logo-eurointerim.png" alt="Eurointerim"></span>
-    <h1 class="hero-title">Hire or Fire? <span class="fire">🔥</span></h1>
+    <span class="stamp-icon"><img src="img/logo-eurointerim-bianco.png" alt="Eurointerim"></span>
+    <p class="kicker">&gt; regia del gioco</p>
+    <h1 class="hero-title">Hire or <span class="accent">Fire?</span><span class="fire" aria-hidden="true">🔥</span></h1>
   </div>
 
   <!-- SCHERMATA 1: crea/apri stanza -->
   <div id="setupScreen" class="setup-box">
-    <p style="font-family:'IBM Plex Sans',sans-serif; font-size:12.5px; color:var(--ink-soft); margin-top:0;">
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:0;">
       Crea una nuova stanza oppure riprendi una stanza già aperta in precedenza.
     </p>
     <button class="control-btn primary" style="width:100%; margin-bottom:14px;" onclick="createRoom()">Crea nuova stanza</button>
     <label for="resumeInput">…oppure riprendi stanza esistente</label>
-    <input id="resumeInput" type="text" maxlength="5" placeholder="Codice stanza" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Sans',sans-serif;">
+    <input id="resumeInput" type="text" maxlength="5" placeholder="Codice stanza" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; ">
     <button class="control-btn" style="width:100%;" onclick="resumeRoom()">Riprendi</button>
   </div>
 
@@ -62,7 +63,7 @@
     </div>
 
     <div class="response-count">
-      <b id="respCount">0</b> risposte ricevute per questo fascicolo — <span style="color:#6b6656;">risultati nascosti finché non li sblocchi</span>
+      <b id="respCount">0</b> risposte ricevute per questo fascicolo — <span>risultati nascosti finché non li sblocchi</span>
     </div>
 
     <div class="nav-row">
@@ -79,7 +80,7 @@
     <button class="control-btn" style="width:100%; margin-top:14px;" onclick="backToPresentation()">← Torna alla proiezione</button>
   </div>
 
-  <p class="footer-note"></p>
+  <div class="footer-note"><span>&gt; generate your future</span><img class="claim" src="img/claim-people-bianco.png" alt="people. our passion"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
