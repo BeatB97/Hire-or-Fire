@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Hire or Fire? — Studente</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=4">
 <!-- Layout cellulare: tutto in una schermata, senza scorrere (v2) -->
 <style>
 body.voting{ overflow:hidden; }
@@ -13,21 +13,21 @@ body.voting .app{
   height:100vh; height:100dvh; min-height:0;
   padding: 6px 10px calc(8px + env(safe-area-inset-bottom, 0px));
 }
-body.voting .brand{ margin:0 0 6px; gap:6px; flex-shrink:0; }
-body.voting .brand .stamp-icon img{ height:26px; width:26px; }
-body.voting .hero-title{ font-size:18px; -webkit-text-stroke:.8px #fff; }
-body.voting .hero-title .fire{ font-size:15px; }
+body.voting .brand{ flex-direction:row; align-items:center; justify-content:space-between; margin:2px 2px 8px; gap:8px; flex-shrink:0; }
+body.voting .brand .stamp-icon img{ width:84px; }
+body.voting .kicker{ display:none; }
+body.voting .hero-title{ font-size:22px; order:-1; }
 body.voting .footer-note{ display:none; }
 
 body.voting #voteScreen{ flex:1; min-height:0; display:flex !important; flex-direction:column; }
-body.voting .folder-tab{ flex-shrink:0; padding:5px 12px; font-size:11px; border-radius:12px 12px 0 0; }
-body.voting .folder{ flex:1; min-height:0; display:flex; flex-direction:column; border-radius:0 0 12px 12px; }
+body.voting .folder-tab{ flex-shrink:0; padding:4px 4px 6px; font-size:10.5px; }
+body.voting .folder{ flex:1; min-height:0; display:flex; flex-direction:column; border-radius:14px; }
 
 body.voting .photo-wrap{ flex:1; min-height:110px; overflow:hidden; cursor:zoom-in; }
 body.voting .photo-wrap img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
 .zoom-hint{
   position:absolute; right:6px; top:6px; z-index:4;
-  background:rgba(0,0,0,.55); color:#fff;
+  background:rgba(6,18,27,.7); color:#fff; font-family:var(--mono); letter-spacing:.04em;
   font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:999px;
   pointer-events:none;
 }
@@ -40,14 +40,14 @@ body.voting .field{ margin-bottom:5px; }
 body.voting .field .label{ font-size:9.5px; margin-bottom:1px; }
 body.voting .field .value{ font-size:13px; line-height:1.3; }
 body.voting .quote-block{ padding:6px 9px; margin-top:2px; }
-body.voting .quote-block .label{ font-size:9.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+body.voting .quote-block .label{ font-size:9.5px; }
 body.voting .quote-block p{ font-size:12px; line-height:1.4; margin-top:2px; }
 
 body.voting .actions{ flex-shrink:0; margin-top:8px; gap:8px; }
-body.voting .stamp-btn{ padding:11px 8px; font-size:15px; box-shadow:0 3px 0 rgba(0,0,0,.15), 0 6px 12px rgba(0,0,0,.1); }
+body.voting .stamp-btn{ padding:12px 8px; font-size:15px; }
 body.voting #waitStatus{
   flex-shrink:0; margin-top:8px; padding:8px 10px;
-  background:#fff; border:1px solid var(--paper-line); border-radius:12px; font-size:12px;
+  background:var(--surface); border:1px solid var(--line); border-radius:14px; font-size:12px;
 }
 body.voting #waitStatus .big{ font-size:15px; margin-bottom:1px; }
 body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
@@ -77,21 +77,22 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
 <div class="app">
 
   <div class="brand">
-    <span class="stamp-icon"><img src="img/logo-eurointerim.png" alt="Eurointerim"></span>
-    <h1 class="hero-title">Hire or Fire? <span class="fire">🔥</span></h1>
+    <span class="stamp-icon"><img src="img/logo-eurointerim-bianco.png" alt="Eurointerim"></span>
+    <p class="kicker">&gt; chi assumeresti?</p>
+    <h1 class="hero-title">Hire or <span class="accent">Fire?</span><span class="fire" aria-hidden="true">🔥</span></h1>
   </div>
 
   <!-- SCHERMATA 1: accesso alla stanza -->
   <div id="joinScreen" class="setup-box">
     <div id="roomFieldWrap">
       <label for="roomInput">Codice stanza (dato dal docente)</label>
-      <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; font-family:'IBM Plex Sans',sans-serif;">
+      <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; ">
     </div>
-    <p id="prefilledRoomHint" style="display:none; font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--brand-dark); margin-top:-6px; margin-bottom:16px;">Stanza <b id="prefilledRoomCode"></b> — scansionata dal QR code</p>
+    <p id="prefilledRoomHint" style="display:none; font-size:12px; color:var(--brand-dark); margin-top:-6px; margin-bottom:16px;">Stanza <b id="prefilledRoomCode"></b> — scansionata dal QR code</p>
     <label for="nameInput">Il tuo nome (facoltativo, resta anonimo se lo lasci vuoto)</label>
     <input id="nameInput" type="text" maxlength="24" placeholder="Nickname" autocomplete="off">
     <button class="control-btn primary" style="width:100%;" onclick="joinRoom()">Entra nella stanza</button>
-    <p id="joinError" style="color:#ef7a72; font-family:'IBM Plex Sans',sans-serif; font-size:12px; margin-top:12px; display:none;"></p>
+    <p id="joinError" style="color:var(--reject); font-size:12px; margin-top:12px; display:none;"></p>
   </div>
 
   <!-- SCHERMATA 1bis: in attesa che il docente avvii il gioco -->
@@ -144,7 +145,7 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
     <div id="resultsList" class="results-list"></div>
   </div>
 
-  <p class="footer-note">versione mobile 2</p>
+  <div class="footer-note"><span>&gt; versione mobile 3</span><img class="claim" src="img/claim-people-bianco.png" alt="people. our passion"></div>
 </div>
 
 <!-- Foto a schermo intero -->
