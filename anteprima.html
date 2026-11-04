@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hire or Fire? — Anteprima card</title>
+<link rel="stylesheet" href="style.css?v=8">
+<style>
+  body{ padding:24px; }
+  .top{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; max-width:1240px; margin:0 auto 20px; }
+  .top h1{ margin:0; font-size:28px; font-weight:900; }
+  .top h1 span{ color:var(--brand); }
+  .switch{ display:flex; gap:8px; }
+  .switch .control-btn.active{ background:var(--brand); color:#06212f; }
+  .row{ max-width:1240px; margin:0 auto 34px; }
+  .row-title{ font-family:var(--mono); font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--brand); margin-bottom:10px; }
+  .row-title b{ color:var(--ink); }
+  .frames{ display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+  .frame-label{ font-size:12px; color:var(--ink-soft); margin-bottom:6px; }
+  /* monitor 1600x900 ridotto al 55% */
+  .monitor{ width:880px; height:495px; overflow:hidden; border-radius:10px; border:6px solid #1c2e3b; background:#000; }
+  .monitor iframe{ width:1600px; height:900px; border:0; transform:scale(.55); transform-origin:0 0; }
+  /* telefono 390x800 ridotto al 62% */
+  .phone{ width:242px; height:496px; overflow:hidden; border-radius:26px; border:6px solid #1c2e3b; background:#000; }
+  .phone iframe{ width:390px; height:800px; border:0; transform:scale(.62); transform-origin:0 0; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <h1>Anteprima card — <span>monitor e telefono</span></h1>
+    <div class="switch">
+      <button class="control-btn active" id="btnQ" onclick="setFase('question')">Durante il voto</button>
+      <button class="control-btn" id="btnR" onclick="setFase('reveal')">Risposta svelata</button>
+    </div>
+  </div>
+  <div id="rows"></div>
+
+<script src="cards-data.js?v=3"></script>
+<script>
+let fase = 'question';
+function build(){
+  const v = Date.now();
+  document.getElementById('rows').innerHTML = CARDS.map((c, i) => `
+    <div class="row">
+      <div class="row-title">${i + 1}. <b>${c.name}, ${c.age} anni</b> — ${c.position} · giusta: ${c.answer === 'match' ? '♥ MATCH' : '✕ SKIP'}</div>
+      <div class="frames">
+        <div><div class="frame-label">🖥️ Monitor organizzatore</div>
+          <div class="monitor"><iframe loading="lazy" src="docente.html?anteprima=${i}&fase=${fase}&v=${v}"></iframe></div></div>
+        <div><div class="frame-label">📱 Telefono partecipante</div>
+          <div class="phone"><iframe loading="lazy" src="studente.html?anteprima=${i}&fase=${fase}&v=${v}"></iframe></div></div>
+      </div>
+    </div>`).join('');
+}
+function setFase(f){
+  fase = f;
+  document.getElementById('btnQ').classList.toggle('active', f === 'question');
+  document.getElementById('btnR').classList.toggle('active', f === 'reveal');
+  build();
+}
+build();
+</script>
+</body>
+</html>

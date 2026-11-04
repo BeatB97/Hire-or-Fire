@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hire or Fire? — Regia</title>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body class="regia">
 <div class="app">
@@ -128,6 +128,25 @@
 <script src="gioco.js?v=1"></script>
 <script>
 let ROOM = null;
+
+// ANTEPRIMA: ?anteprima=N mostra il candidato N con dati finti, senza usare il database.
+// &fase=reveal mostra la risposta svelata.
+const PREVIEW_PARAMS = new URLSearchParams(location.search);
+const PREVIEW = PREVIEW_PARAMS.has('anteprima');
+function demoData(){
+  const i = Math.max(0, Math.min(CARDS.length - 1, parseInt(PREVIEW_PARAMS.get('anteprima'), 10) || 0));
+  const ans = CARDS[i].answer, wrong = ans === 'match' ? 'skip' : 'match';
+  const reveal = PREVIEW_PARAMS.get('fase') === 'reveal';
+  const votes = { demo_b: wrong, demo_c: ans, demo_d: ans };
+  if (reveal) votes.demo_a = ans; // "Giulia" (il telefono in anteprima) risponde solo nella vista svelata
+  return {
+    phase: reveal ? 'reveal' : 'question',
+    currentIndex: i,
+    cardOrder: CARDS.map((_, k) => k),
+    students: { demo_a: 'Giulia', demo_b: 'Marco', demo_c: 'Sara', demo_d: 'Luca', demo_e: 'Anna' },
+    votes: { [i]: votes }
+  };
+}
 let DATA = null;
 let shownCardPos = null;
 let autoRevealTimer = null;
@@ -221,6 +240,7 @@ function renderLobby(){
 }
 
 function startGame(){
+  if (PREVIEW) return;
   db.ref('sessions/' + ROOM).update({ phase: 'question', currentIndex: 0 });
 }
 
@@ -296,11 +316,13 @@ function renderPlay(){
 }
 
 function reveal(){
+  if (PREVIEW) return;
   clearTimeout(autoRevealTimer);
   db.ref('sessions/' + ROOM).update({ phase: 'reveal' });
 }
 
 function nextCard(){
+  if (PREVIEW) return;
   const pos = DATA.currentIndex || 0;
   if (pos >= CARDS.length - 1){
     db.ref('sessions/' + ROOM).update({ phase: 'final' });
@@ -382,6 +404,12 @@ function newGame(){
   showOnly(null);
   $('summaryList').style.display = 'none';
   createRoom();
+}
+if (PREVIEW){
+  DATA = demoData();
+  $('setupScreen').style.display = 'none';
+  $('roomLabel').textContent = 'DEMO';
+  render();
 }
 </script>
 </body>

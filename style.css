@@ -486,6 +486,7 @@ body.regia .brand-row .hero-title{ font-size:44px; }
 
 /* Gioco: profilo a sinistra, risposte a destra */
 .play-grid{ display:grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.5fr) minmax(300px, 1fr); gap:22px; align-items:start; }
+body.regia .play-grid .photo-wrap{ container-type:inline-size; }
 body.regia .play-grid .photo-wrap img{ max-height:72vh; width:auto; max-width:100%; margin:0 auto; }
 
 /* I due box al centro: come si presenta + valutazione della recruiter */
@@ -516,7 +517,7 @@ body.regia .play-grid .photo-wrap img{ max-height:72vh; width:auto; max-width:10
 .progress-fill{ height:100%; width:0; background:var(--brand); transition:width .3s ease; }
 
 .answer-banner{
-  font-weight:900; font-size:26px; text-align:center; padding:14px; border-radius:14px; margin-bottom:14px;
+  font-weight:900; font-size:23px; text-align:center; padding:14px; border-radius:14px; margin-bottom:14px;
 }
 .answer-banner.approve{ background:rgba(34,195,142,.16); color:var(--approve); border:2px solid var(--approve); }
 .answer-banner.reject{ background:rgba(255,90,110,.14); color:var(--reject); border:2px solid var(--reject); }
@@ -525,8 +526,8 @@ body.regia .play-grid .photo-wrap img{ max-height:72vh; width:auto; max-width:10
 /* Timbro della risposta giusta sulla foto (monitor) */
 .reveal-stamp{
   position:absolute; left:50%; top:50%;
-  font-weight:900; font-size:54px; letter-spacing:.06em; white-space:nowrap;
-  padding:10px 30px; border:6px solid currentColor; border-radius:16px;
+  font-weight:900; font-size:min(54px, 15cqw); letter-spacing:.06em; white-space:nowrap;
+  padding:.18em .5em; border:.11em solid currentColor; border-radius:16px;
   background:rgba(6,18,27,.55);
   transform: translate(-50%,-50%) rotate(-14deg); opacity:0; pointer-events:none;
 }

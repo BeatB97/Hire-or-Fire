@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Hire or Fire? — Studente</title>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 <!-- Layout cellulare: tutto in una schermata, senza scorrere (v2) -->
 <style>
 body.voting{ overflow:hidden; }
@@ -171,6 +171,25 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
 <script src="gioco.js?v=1"></script>
 <script>
 let ROOM = null;
+
+// ANTEPRIMA: ?anteprima=N mostra il candidato N con dati finti, senza usare il database.
+// &fase=reveal mostra la risposta svelata.
+const PREVIEW_PARAMS = new URLSearchParams(location.search);
+const PREVIEW = PREVIEW_PARAMS.has('anteprima');
+function demoData(){
+  const i = Math.max(0, Math.min(CARDS.length - 1, parseInt(PREVIEW_PARAMS.get('anteprima'), 10) || 0));
+  const ans = CARDS[i].answer, wrong = ans === 'match' ? 'skip' : 'match';
+  const reveal = PREVIEW_PARAMS.get('fase') === 'reveal';
+  const votes = { demo_b: wrong, demo_c: ans, demo_d: ans };
+  if (reveal) votes.demo_a = ans; // "Giulia" (il telefono in anteprima) risponde solo nella vista svelata
+  return {
+    phase: reveal ? 'reveal' : 'question',
+    currentIndex: i,
+    cardOrder: CARDS.map((_, k) => k),
+    students: { demo_a: 'Giulia', demo_b: 'Marco', demo_c: 'Sara', demo_d: 'Luca', demo_e: 'Anna' },
+    votes: { [i]: votes }
+  };
+}
 let STUDENT_ID = localStorage.getItem('studentId');
 if (!STUDENT_ID) {
   STUDENT_ID = 'stu_' + Math.random().toString(36).slice(2, 10);
@@ -326,6 +345,7 @@ function setButtonsEnabled(enabled){
 }
 
 function vote(choice){
+  if (PREVIEW) return;
   if (votedForCurrentIndex || currentIndex === null || !DATA || DATA.phase !== 'question') return;
   votedForCurrentIndex = true;
   setButtonsEnabled(false);
@@ -356,6 +376,13 @@ function showFinal(){
       <span class="board-name">${escapeHtml(r.name)}</span>
       <span class="board-score">${r.score} pt</span>
     </div>`).join('');
+}
+if (PREVIEW){
+  STUDENT_ID = 'demo_a'; // in anteprima siamo "Giulia", che risponde giusto
+  DATA = demoData();
+  $('joinScreen').style.display = 'none';
+  $('roomLabel').textContent = 'DEMO';
+  render();
 }
 </script>
 </body>
