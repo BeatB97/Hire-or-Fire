@@ -29,16 +29,17 @@
   <div class="top">
     <h1>Anteprima card — <span>monitor e telefono</span></h1>
     <div class="switch">
-      <button class="control-btn" onclick="sbloccaAudio(); suonaApplauso()">🔊 Prova applauso</button>
-      <button class="control-btn" onclick="sbloccaAudio(); suonaBuuu()">🔊 Prova buuu</button>
+      <button class="control-btn" onclick="provaSuono('applauso')">🔊 Prova applauso</button>
+      <button class="control-btn" onclick="provaSuono('buuu')">🔊 Prova buuu</button>
       <button class="control-btn active" id="btnQ" onclick="setFase('question')">Durante il voto</button>
       <button class="control-btn" id="btnR" onclick="setFase('reveal')">Risposta svelata</button>
     </div>
   </div>
+  <div id="avvisoSuoni" style="max-width:1240px;margin:-8px auto 14px;color:#ffc440;font-size:13px;"></div>
   <div id="rows"></div>
 
 <script src="cards-data.js?v=3"></script>
-<script src="suoni.js?v=2"></script>
+<script src="suoni.js?v=3"></script>
 <script>
 let fase = 'question';
 function build(){

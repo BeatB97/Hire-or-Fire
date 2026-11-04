@@ -1,0 +1,4 @@
+Metti qui i due suoni del gioco (formato mp3, brevi: 2-4 secondi):
+  applauso.mp3  -> risposta giusta
+  buuu.mp3      -> risposta sbagliata
+Se un file manca, il gioco funziona lo stesso senza quel suono.
