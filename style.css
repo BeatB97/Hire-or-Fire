@@ -485,10 +485,29 @@ body.regia .brand-row .hero-title{ font-size:44px; }
 @keyframes pop{ 0%{ transform:scale(.6); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
 
 /* Gioco: profilo a sinistra, risposte a destra */
-.play-grid{ display:grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, 1fr); gap:24px; align-items:start; }
-body.regia .play-grid .photo-wrap img{ max-height:52vh; width:auto; max-width:100%; margin:0 auto; }
-body.regia .play-grid .field .value{ font-size:20px; }
-body.regia .play-grid .quote-block p{ font-size:17px; }
+.play-grid{ display:grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.5fr) minmax(300px, 1fr); gap:22px; align-items:start; }
+body.regia .play-grid .photo-wrap img{ max-height:72vh; width:auto; max-width:100%; margin:0 auto; }
+
+/* I due box al centro: come si presenta + valutazione della recruiter */
+.info-col{ display:flex; flex-direction:column; gap:16px; }
+.cand-head{ padding:2px 4px 0; }
+.cand-name{ font-weight:900; font-size:34px; letter-spacing:-.01em; line-height:1.1; }
+.cand-role{ font-size:19px; font-weight:700; color:var(--ink); margin-top:6px; }
+.cand-role .label{
+  font-family:var(--mono); font-weight:500; font-size:12px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--brand); margin-right:4px;
+}
+.info-box{
+  background:rgba(31,181,234,.08); border:1px solid var(--paper-line); border-left:5px solid var(--brand);
+  border-radius:14px; padding:16px 20px;
+}
+.info-box.recruiter{ background:rgba(255,196,64,.07); border-color:rgba(255,196,64,.35); border-left-color:#ffc440; }
+.info-box-title{
+  font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--brand); margin-bottom:8px;
+}
+.info-box.recruiter .info-box-title{ color:#ffc440; }
+.info-box p{ margin:0; font-size:21px; line-height:1.5; color:#eaf3f8; }
 .side-panel{
   background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
   padding:22px 20px; box-shadow:0 18px 40px rgba(0,0,0,.25);
@@ -566,6 +585,11 @@ body.regia .play-grid .quote-block p{ font-size:17px; }
 .outcome-small{ font-size:13px; color:var(--ink-soft); margin-top:4px; line-height:1.45; }
 .outcome-small b{ color:var(--ink); }
 
+@media (max-width:1200px){
+  .play-grid{ grid-template-columns: minmax(200px, .8fr) minmax(0, 1.6fr); }
+  .play-grid .side-panel{ grid-column: 1 / -1; }
+  .info-box p{ font-size:18px; }
+}
 @media (max-width:900px){
   .lobby-grid, .play-grid{ grid-template-columns:1fr; }
   body.regia .app{ padding:16px; }
