@@ -207,6 +207,7 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
 <script src="firebase-config.js"></script>
 <script src="cards-data.js?v=3"></script>
 <script src="gioco.js?v=2"></script>
+<script src="suoni.js?v=2"></script>
 <script>
 let ROOM = null;
 
@@ -237,6 +238,7 @@ if (!STUDENT_ID) {
 let DATA = null;
 let currentIndex = null;
 let votedForCurrentIndex = false;
+let suonoFattoPer = null; // profilo per cui è già partito applauso/buuu
 
 function $(id){ return document.getElementById(id); }
 
@@ -260,6 +262,7 @@ function showError(msg){
 }
 
 function joinRoom(){
+  sbloccaAudio(); // il tocco su "Entra" abilita i suoni sul telefono
   const code = prefilledRoom || $('roomInput').value.trim().toUpperCase();
   const name = $('nameInput').value.trim();
   $('joinError').style.display = 'none';
@@ -320,6 +323,11 @@ function render(){
   const me = board.find(r => r.id === STUDENT_ID);
   const rank = rankOf(board, STUDENT_ID);
   const panel = $('outcomeStatus');
+  // Applauso se giusto, "buuu" se sbagliato (una volta sola per profilo)
+  if (myVote && suonoFattoPer !== idx) {
+    suonoFattoPer = idx;
+    if (myVote === card.answer) suonaApplauso(); else suonaBuuu();
+  }
   if (!myVote) {
     panel.className = 'outcome-panel none';
     $('outcomeBig').textContent = '⏱ Non hai risposto';
@@ -401,6 +409,7 @@ function setButtonsEnabled(enabled){
 }
 
 function vote(choice){
+  sbloccaAudio();
   if (PREVIEW) return;
   if (votedForCurrentIndex || currentIndex === null || !DATA || DATA.phase !== 'question') return;
   votedForCurrentIndex = true;
