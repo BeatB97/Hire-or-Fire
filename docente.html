@@ -3,81 +3,118 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hire or Fire? — Regia Docente</title>
-<link rel="stylesheet" href="style.css?v=4">
+<title>Hire or Fire? — Regia</title>
+<link rel="stylesheet" href="style.css?v=5">
 </head>
-<body>
-<div class="app" style="max-width:640px;">
+<body class="regia">
+<div class="app">
 
-  <div class="brand">
+  <div class="brand brand-row">
     <span class="stamp-icon"><img src="img/logo-eurointerim-bianco.png" alt="Eurointerim"></span>
-    <p class="kicker">&gt; regia del gioco</p>
     <h1 class="hero-title">Hire or <span class="accent">Fire?</span><span class="fire" aria-hidden="true">🔥</span></h1>
   </div>
 
   <!-- SCHERMATA 1: crea/apri stanza -->
-  <div id="setupScreen" class="setup-box">
-    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:0;">
+  <div id="setupScreen" class="setup-box narrow">
+    <p class="kicker" style="margin-bottom:12px;">&gt; regia del gioco</p>
+    <p style="font-size:13px; color:var(--ink-soft); margin-top:0;">
       Crea una nuova stanza oppure riprendi una stanza già aperta in precedenza.
     </p>
     <button class="control-btn primary" style="width:100%; margin-bottom:14px;" onclick="createRoom()">Crea nuova stanza</button>
     <label for="resumeInput">…oppure riprendi stanza esistente</label>
-    <input id="resumeInput" type="text" maxlength="5" placeholder="Codice stanza" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; ">
+    <input id="resumeInput" type="text" maxlength="5" placeholder="Codice stanza" style="text-transform:uppercase; letter-spacing:.1em; text-align:center;">
     <button class="control-btn" style="width:100%;" onclick="resumeRoom()">Riprendi</button>
   </div>
 
-  <!-- SCHERMATA 2: sala d'attesa / codice stanza -->
+  <!-- SCHERMATA 2: iscrizioni -->
   <div id="lobbyScreen" style="display:none;">
-    <div class="setup-box">
-      <div class="room-code-display">
-        <div class="code" id="roomCodeBig">—</div>
-        <div class="hint">Scansionando il QR gli studenti entrano subito (solo nickname). In alternativa possono aprire STUDENTE.html e digitare questo codice.</div>
+    <div class="lobby-grid">
+      <div class="setup-box lobby-join">
+        <div class="lobby-step">Inquadra il QR col telefono</div>
+        <div id="qrWrap"></div>
+        <div class="room-code-display">
+          <div class="hint">oppure apri <b id="joinUrl"></b> e inserisci il codice</div>
+          <div class="code" id="roomCodeBig">—</div>
+        </div>
       </div>
-      <div id="qrWrap" style="text-align:center; margin:14px 0;"></div>
-      <div class="response-count" id="joinedCount">0 studenti collegati</div>
-      <button class="control-btn primary" style="width:100%; margin-top:16px;" onclick="startPresentation()">Inizia proiezione fascicolo 1</button>
+      <div class="setup-box lobby-players">
+        <div class="big-count"><b id="lobbyCount">0</b> partecipanti iscritti</div>
+        <div id="lobbyChips" class="chips"></div>
+        <button class="control-btn primary big-btn" id="startBtn" onclick="startGame()" disabled>▶ Inizia il gioco</button>
+      </div>
     </div>
   </div>
 
-  <!-- SCHERMATA 3: regia presentazione -->
-  <div id="presentScreen" style="display:none;">
+  <!-- SCHERMATA 3: gioco -->
+  <div id="playScreen" style="display:none;">
     <div class="toolbar">
-      <span class="progress">STANZA <b id="roomLabel2"></b></span>
-      <span class="progress" id="cardProgress2"></span>
+      <span class="progress">STANZA <b id="roomLabel"></b></span>
+      <span class="progress" id="cardProgress"></span>
     </div>
 
-    <div class="folder">
-      <div class="photo-wrap">
-        <img id="cardImg2" src="" alt="">
-      </div>
-      <div class="dossier-body">
-        <div class="field">
-          <span class="label">Posizione desiderata</span>
-          <span class="value" id="cardPosition2"></span>
+    <div class="play-grid">
+      <div class="folder">
+        <div class="photo-wrap">
+          <img id="cardImg" src="" alt="">
+          <div class="reveal-stamp" id="revealStamp"></div>
         </div>
-        <div class="quote-block">
-          <span class="label" id="cardQuoteLabel2"></span>
-          <p id="cardQuote2"></p>
+        <div class="dossier-body">
+          <div class="field" id="nameField" style="display:none;">
+            <span class="label">Candidato</span>
+            <span class="value" id="cardName"></span>
+          </div>
+          <div class="field">
+            <span class="label">Posizione desiderata</span>
+            <span class="value" id="cardPosition"></span>
+          </div>
+          <div class="quote-block">
+            <span class="label" id="cardQuoteLabel"></span>
+            <p id="cardQuote"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <!-- durante il voto -->
+        <div id="questionPanel">
+          <div class="big-count"><b id="answeredCount">0</b><span> / <span id="playersCount">0</span></span></div>
+          <div class="big-count-label">hanno risposto</div>
+          <div class="progress-track"><div class="progress-fill" id="answeredBar"></div></div>
+          <div id="questionChips" class="chips"></div>
+          <button class="control-btn primary big-btn" onclick="reveal()">Mostra la risposta giusta</button>
+          <p class="side-hint">Quando hanno risposto tutti, la risposta giusta compare da sola.</p>
+        </div>
+
+        <!-- risposta svelata -->
+        <div id="revealPanel" style="display:none;">
+          <div class="answer-banner" id="answerBanner"></div>
+          <div class="bar-track big">
+            <div class="bar-match" id="barMatch"></div>
+            <div class="bar-skip" id="barSkip"></div>
+          </div>
+          <div class="bar-labels">
+            <span id="lblMatch"></span>
+            <span id="lblSkip"></span>
+          </div>
+          <div id="revealChips" class="chips"></div>
+          <div class="mini-board-title">Classifica</div>
+          <div id="miniBoard" class="board"></div>
+          <button class="control-btn primary big-btn" id="nextBtn" onclick="nextCard()">Prossimo profilo →</button>
         </div>
       </div>
     </div>
-
-    <div class="response-count">
-      <b id="respCount">0</b> risposte ricevute per questo fascicolo — <span>risultati nascosti finché non li sblocchi</span>
-    </div>
-
-    <div class="nav-row">
-      <button class="control-btn" id="prevBtn" onclick="changeCard(-1)">← Precedente</button>
-      <button class="control-btn" id="nextBtn" onclick="changeCard(1)">Successivo →</button>
-    </div>
-    <button class="control-btn primary" style="width:100%; margin-top:12px;" onclick="revealResults()">🔓 Sblocca e mostra i risultati finali</button>
   </div>
 
-  <!-- SCHERMATA 4: risultati -->
-  <div id="resultsScreen2" style="display:none;">
-    <div class="status-panel"><div class="big">Risultati finali — Discussione</div></div>
-    <div id="resultsList2" class="results-list"></div>
-    <button class="control-btn" style="width:100%; margin-top:14px;" onclick="backToPresentation()">← Torna alla proiezione</button>
+  <!-- SCHERMATA 4: classifica finale -->
+  <div id="finalScreen" style="display:none;">
+    <div class="status-panel"><div class="big final-title">🏆 Classifica finale</div></div>
+    <div id="podium" class="podium"></div>
+    <div id="finalBoard" class="board narrow"></div>
+    <div class="nav-row narrow">
+      <button class="control-btn" onclick="toggleSummary()">Riepilogo voti per candidato</button>
+      <button class="control-btn" onclick="newGame()">Nuova partita</button>
+    </div>
+    <div id="summaryList" class="results-list narrow" style="display:none;"></div>
   </div>
 
   <div class="footer-note"><span>&gt; generate your future</span><img class="claim" src="img/claim-people-bianco.png" alt="people. our passion"></div>
@@ -87,20 +124,24 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="cards-data.js"></script>
+<script src="gioco.js?v=1"></script>
 <script>
 let ROOM = null;
-let currentIndex = 0;
-let CARD_ORDER = CARDS.map((_, i) => i); // ordine di default, sovrascritto per ogni stanza
+let DATA = null;
+let shownCardPos = null;
+let autoRevealTimer = null;
+
+function $(id){ return document.getElementById(id); }
 
 function randomCode(){
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
-  for (let i=0;i<5;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
 }
 
 function shuffledOrder(n){
-  const arr = Array.from({length: n}, (_, i) => i);
+  const arr = Array.from({ length: n }, (_, i) => i);
   for (let i = arr.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -109,125 +150,210 @@ function shuffledOrder(n){
 }
 
 function createRoom(){
-  ROOM = randomCode();
-  const order = shuffledOrder(CARDS.length);
-  db.ref('sessions/' + ROOM).set({
+  const code = randomCode();
+  db.ref('sessions/' + code).set({
     meta: { createdAt: Date.now() },
+    phase: 'lobby',
     currentIndex: 0,
-    cardOrder: order,
-    started: false,
-    revealed: false
-  }).then(() => enterLobby());
+    cardOrder: shuffledOrder(CARDS.length)
+  }).then(() => openRoom(code));
 }
 
 function resumeRoom(){
-  const code = document.getElementById('resumeInput').value.trim().toUpperCase();
+  const code = $('resumeInput').value.trim().toUpperCase();
   if (!code) return;
   db.ref('sessions/' + code + '/meta').once('value').then(snap => {
     if (!snap.exists()) { alert('Nessuna stanza trovata con questo codice.'); return; }
-    ROOM = code;
-    enterLobby();
+    openRoom(code);
   });
 }
 
-function enterLobby(){
-  document.getElementById('setupScreen').style.display = 'none';
-  document.getElementById('lobbyScreen').style.display = 'block';
-  document.getElementById('roomCodeBig').textContent = ROOM;
-
-  db.ref(`sessions/${ROOM}/cardOrder`).once('value').then(snap => {
-    if (snap.exists()) CARD_ORDER = snap.val();
-  });
+function openRoom(code){
+  ROOM = code;
+  $('setupScreen').style.display = 'none';
+  $('roomCodeBig').textContent = ROOM;
+  $('roomLabel').textContent = ROOM;
 
   const studentUrl = location.href.replace(/docente\.html.*$/, 'studente.html') + '?room=' + ROOM;
-  document.getElementById('qrWrap').innerHTML =
-    `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(studentUrl)}" alt="QR code" style="border-radius:8px;">`;
+  $('joinUrl').textContent = location.href.replace(/^https?:\/\//, '').replace(/docente\.html.*$/, '');
+  $('qrWrap').innerHTML =
+    `<img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(studentUrl)}" alt="QR code">`;
 
-  db.ref(`sessions/${ROOM}/students`).on('value', snap => {
-    const n = snap.exists() ? Object.keys(snap.val()).length : 0;
-    document.getElementById('joinedCount').textContent = n + ' studenti con nickname registrato';
+  // Tutta la schermata segue lo stato salvato su Firebase:
+  // se la pagina si ricarica, si riparte esattamente da dove si era.
+  db.ref('sessions/' + ROOM).on('value', snap => {
+    DATA = snap.val();
+    if (DATA) render();
   });
 }
 
-function startPresentation(){
-  document.getElementById('lobbyScreen').style.display = 'none';
-  document.getElementById('presentScreen').style.display = 'block';
-  document.getElementById('roomLabel2').textContent = ROOM;
-  currentIndex = 0;
-  db.ref(`sessions/${ROOM}/started`).set(true);
-  pushCurrentIndex();
-  listenResponses();
+function showOnly(id){
+  ['lobbyScreen', 'playScreen', 'finalScreen'].forEach(s => $(s).style.display = (s === id ? 'block' : 'none'));
 }
 
-function renderCard2(idx){
-  const card = CARDS[CARD_ORDER[idx]];
-  document.getElementById('cardProgress2').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
-  document.getElementById('cardImg2').src = card.img;
-  document.getElementById('cardPosition2').textContent = card.position;
-  document.getElementById('cardQuoteLabel2').textContent = card.quoteLabel;
-  document.getElementById('cardQuote2').textContent = card.quote;
-  document.getElementById('prevBtn').disabled = idx === 0;
-  document.getElementById('nextBtn').disabled = idx === CARDS.length - 1;
+function render(){
+  const phase = DATA.phase || 'lobby';
+  if (phase === 'lobby') return renderLobby();
+  if (phase === 'final') return renderFinal();
+  renderPlay();
 }
 
-function pushCurrentIndex(){
-  renderCard2(currentIndex);
-  db.ref(`sessions/${ROOM}/currentIndex`).set(currentIndex);
+function playersList(){
+  const st = DATA.students || {};
+  return Object.keys(st).map(id => ({ id, name: String(st[id]) }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'it'));
 }
 
-function changeCard(delta){
-  const next = currentIndex + delta;
-  if (next < 0 || next >= CARDS.length) return;
-  currentIndex = next;
-  pushCurrentIndex();
+function chipsHtml(players, classFor){
+  return players.map(p => `<span class="chip ${classFor(p)}">${escapeHtml(p.name)}</span>`).join('');
 }
 
-function listenResponses(){
-  db.ref(`sessions/${ROOM}/votes`).on('value', snap => {
-    const data = snap.val() || {};
-    const count = data[currentIndex] ? Object.keys(data[currentIndex]).length : 0;
-    document.getElementById('respCount').textContent = count;
-  });
-  // Re-check count whenever the projected card changes
-  const originalPush = pushCurrentIndex;
-  pushCurrentIndex = function(){
-    originalPush();
-    db.ref(`sessions/${ROOM}/votes`).once('value').then(snap => {
-      const data = snap.val() || {};
-      const count = data[currentIndex] ? Object.keys(data[currentIndex]).length : 0;
-      document.getElementById('respCount').textContent = count;
-    });
-  };
+/* ---------- Iscrizioni ---------- */
+function renderLobby(){
+  showOnly('lobbyScreen');
+  const players = playersList();
+  $('lobbyCount').textContent = players.length;
+  $('lobbyChips').innerHTML = players.length
+    ? chipsHtml(players, () => 'on pop')
+    : '<span class="side-hint">In attesa dei primi partecipanti…</span>';
+  $('startBtn').disabled = players.length === 0;
 }
 
-function revealResults(){
-  db.ref(`sessions/${ROOM}/revealed`).set(true);
-  db.ref(`sessions/${ROOM}/votes`).once('value').then(snap => {
-    showResults2(snap.val() || {});
-  });
+function startGame(){
+  db.ref('sessions/' + ROOM).update({ phase: 'question', currentIndex: 0 });
 }
 
-function backToPresentation(){
-  db.ref(`sessions/${ROOM}/revealed`).set(false);
-  document.getElementById('resultsScreen2').style.display = 'none';
-  document.getElementById('presentScreen').style.display = 'block';
+/* ---------- Gioco ---------- */
+function renderPlay(){
+  showOnly('playScreen');
+  const pos = DATA.currentIndex || 0;
+  const card = cardAt(DATA, pos);
+  const isReveal = DATA.phase === 'reveal';
+
+  if (shownCardPos !== pos){
+    shownCardPos = pos;
+    $('cardImg').src = card.img;
+    $('cardImg').alt = card.position;
+    $('cardPosition').textContent = card.position;
+    $('cardQuoteLabel').textContent = card.quoteLabel;
+    $('cardQuote').textContent = card.quote;
+    $('cardName').textContent = card.name;
+  }
+  $('cardProgress').textContent = `PROFILO ${pos + 1}/${CARDS.length}`;
+  $('nameField').style.display = isReveal ? 'block' : 'none';
+
+  const players = playersList();
+  const votes = votesAt(DATA, pos);
+  const answered = players.filter(p => votes[p.id]).length;
+
+  $('questionPanel').style.display = isReveal ? 'none' : 'block';
+  $('revealPanel').style.display = isReveal ? 'block' : 'none';
+
+  const stamp = $('revealStamp');
+  if (isReveal){
+    stamp.textContent = card.answer === 'match' ? 'MATCH ♥' : 'SKIP ✕';
+    stamp.className = 'reveal-stamp show ' + (card.answer === 'match' ? 'approve' : 'reject');
+  } else {
+    stamp.className = 'reveal-stamp';
+  }
+
+  if (!isReveal){
+    $('answeredCount').textContent = answered;
+    $('playersCount').textContent = players.length;
+    $('answeredBar').style.width = players.length ? (answered / players.length * 100) + '%' : '0%';
+    $('questionChips').innerHTML = chipsHtml(players, p => votes[p.id] ? 'on' : 'off');
+
+    // Hanno risposto tutti: svela da sola dopo un attimo
+    clearTimeout(autoRevealTimer);
+    if (players.length > 0 && answered >= players.length){
+      autoRevealTimer = setTimeout(() => {
+        if (DATA.phase === 'question' && (DATA.currentIndex || 0) === pos) reveal();
+      }, 1500);
+    }
+    return;
+  }
+
+  clearTimeout(autoRevealTimer);
+  const all = Object.values(votes);
+  const m = all.filter(v => v === 'match').length;
+  const s = all.filter(v => v === 'skip').length;
+  const tot = m + s;
+  const mp = tot ? Math.round(m / tot * 100) : 0;
+  const sp = tot ? 100 - mp : 0;
+  $('answerBanner').className = 'answer-banner ' + (card.answer === 'match' ? 'approve' : 'reject');
+  $('answerBanner').innerHTML = `Risposta giusta: <b>${answerLabel(card.answer)}</b>`;
+  $('barMatch').style.width = mp + '%';
+  $('barSkip').style.width = sp + '%';
+  $('lblMatch').textContent = `♥ MATCH ${mp}% (${m})`;
+  $('lblSkip').textContent = `SKIP ${sp}% (${s}) ✕`;
+  $('revealChips').innerHTML = chipsHtml(players, p =>
+    !votes[p.id] ? 'off' : (votes[p.id] === card.answer ? 'ok' : 'ko'));
+
+  const board = computeLeaderboard(DATA);
+  $('miniBoard').innerHTML = boardHtml(board.slice(0, 5), board);
+  const last = pos >= CARDS.length - 1;
+  $('nextBtn').textContent = last ? '🏆 Classifica finale' : 'Prossimo profilo →';
 }
 
-function showResults2(votesData){
-  document.getElementById('presentScreen').style.display = 'none';
-  document.getElementById('resultsScreen2').style.display = 'block';
-  const list = document.getElementById('resultsList2');
+function reveal(){
+  clearTimeout(autoRevealTimer);
+  db.ref('sessions/' + ROOM).update({ phase: 'reveal' });
+}
+
+function nextCard(){
+  const pos = DATA.currentIndex || 0;
+  if (pos >= CARDS.length - 1){
+    db.ref('sessions/' + ROOM).update({ phase: 'final' });
+  } else {
+    db.ref('sessions/' + ROOM).update({ phase: 'question', currentIndex: pos + 1 });
+  }
+}
+
+function boardHtml(rows, fullBoard){
+  return rows.map(r => `
+    <div class="board-row">
+      <span class="board-rank">${rankOf(fullBoard, r.id)}°</span>
+      <span class="board-name">${escapeHtml(r.name)}</span>
+      <span class="board-score">${r.score} pt</span>
+    </div>`).join('');
+}
+
+/* ---------- Classifica finale ---------- */
+function renderFinal(){
+  showOnly('finalScreen');
+  const board = computeLeaderboard(DATA);
+  const top = board.slice(0, 3);
+  const slots = [top[1], top[0], top[2]]; // 2° - 1° - 3°
+  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+  $('podium').innerHTML = slots.map(r => {
+    if (!r) return '<div class="podium-slot empty"></div>';
+    const rank = rankOf(board, r.id);
+    return `<div class="podium-slot p${Math.min(rank, 3)}">
+      <div class="podium-name">${escapeHtml(r.name)}</div>
+      <div class="podium-score">${r.score} pt</div>
+      <div class="podium-block">${medals[rank] || rank + '°'}</div>
+    </div>`;
+  }).join('');
+  $('finalBoard').innerHTML = boardHtml(board.slice(3), board);
+  renderSummary();
+}
+
+function toggleSummary(){
+  const el = $('summaryList');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function renderSummary(){
+  const list = $('summaryList');
   list.innerHTML = '';
-
-  CARD_ORDER.forEach((cardIdx, position) => {
+  getOrder(DATA).forEach((cardIdx, pos) => {
     const card = CARDS[cardIdx];
-    const votes = votesData[position] ? Object.values(votesData[position]) : [];
-    const matchCount = votes.filter(v => v === 'match').length;
-    const skipCount = votes.filter(v => v === 'skip').length;
-    const total = matchCount + skipCount;
-    const matchPct = total ? Math.round((matchCount/total)*100) : 0;
-    const skipPct = total ? 100 - matchPct : 0;
-
+    const all = Object.values(votesAt(DATA, pos));
+    const m = all.filter(v => v === 'match').length;
+    const s = all.filter(v => v === 'skip').length;
+    const tot = m + s;
+    const mp = tot ? Math.round(m / tot * 100) : 0;
+    const sp = tot ? 100 - mp : 0;
     const row = document.createElement('div');
     row.className = 'result-row result-row-with-thumb';
     row.innerHTML = `
@@ -235,19 +361,27 @@ function showResults2(votesData){
       <div class="rr-body">
         <div class="rr-head">
           <span>${card.name} — ${card.position}</span>
-          <span class="rr-total">${total} voti</span>
+          <span class="rr-total">giusta: ${answerLabel(card.answer)}</span>
         </div>
         <div class="bar-track">
-          <div class="bar-match" style="width:${matchPct}%"></div>
-          <div class="bar-skip" style="width:${skipPct}%"></div>
+          <div class="bar-match" style="width:${mp}%"></div>
+          <div class="bar-skip" style="width:${sp}%"></div>
         </div>
         <div class="bar-labels">
-          <span>♥ MATCH ${matchPct}% (${matchCount})</span>
-          <span>SKIP ${skipPct}% (${skipCount}) ✕</span>
+          <span>♥ MATCH ${mp}% (${m})</span>
+          <span>SKIP ${sp}% (${s}) ✕</span>
         </div>
       </div>`;
     list.appendChild(row);
   });
+}
+
+function newGame(){
+  if (ROOM) db.ref('sessions/' + ROOM).off();
+  ROOM = null; DATA = null; shownCardPos = null;
+  showOnly(null);
+  $('summaryList').style.display = 'none';
+  createRoom();
 }
 </script>
 </body>
