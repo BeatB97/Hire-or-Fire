@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hire or Fire? — Regia</title>
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body class="regia">
 <div class="app">
@@ -125,7 +125,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="cards-data.js?v=3"></script>
-<script src="gioco.js?v=1"></script>
+<script src="gioco.js?v=2"></script>
 <script>
 let ROOM = null;
 
@@ -253,7 +253,7 @@ function renderPlay(){
 
   if (shownCardPos !== pos){
     shownCardPos = pos;
-    $('cardImg').src = card.img;
+    $('cardImg').src = cleanImg(card);
     $('cardImg').alt = card.position;
     $('cardPosition').textContent = card.position;
     $('cardPresentazione').textContent = card.presentazione;
@@ -379,7 +379,7 @@ function renderSummary(){
     const row = document.createElement('div');
     row.className = 'result-row result-row-with-thumb';
     row.innerHTML = `
-      <img class="rr-thumb" src="${card.img}" alt="${card.name}">
+      <img class="rr-thumb" src="${cleanImg(card)}" alt="${card.name}">
       <div class="rr-body">
         <div class="rr-head">
           <span>${card.name} — ${card.position}</span>

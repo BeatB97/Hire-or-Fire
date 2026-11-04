@@ -58,6 +58,11 @@ function rankOf(board, id){
   return 1 + board.filter(r => r.score > me.score).length;
 }
 
+// Foto senza testi sovrapposti (nome, passioni, descrizione): cartella img/telefono
+function cleanImg(card){
+  return card.img.replace('img/', 'img/telefono/').replace(/\.png$/i, '.jpg');
+}
+
 function answerLabel(a){
   return a === 'match' ? '♥ MATCH' : '✕ SKIP';
 }

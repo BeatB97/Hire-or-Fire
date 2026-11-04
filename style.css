@@ -487,7 +487,8 @@ body.regia .brand-row .hero-title{ font-size:44px; }
 /* Gioco: profilo a sinistra, risposte a destra */
 .play-grid{ display:grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.5fr) minmax(300px, 1fr); gap:22px; align-items:start; }
 body.regia .play-grid .photo-wrap{ container-type:inline-size; }
-body.regia .play-grid .photo-wrap img{ max-height:72vh; width:auto; max-width:100%; margin:0 auto; }
+body.regia .play-grid .photo-wrap{ height:64vh; }
+body.regia .play-grid .photo-wrap img{ width:100%; height:100%; object-fit:cover; object-position:center 25%; }
 
 /* I due box al centro: come si presenta + valutazione della recruiter */
 .info-col{ display:flex; flex-direction:column; gap:16px; }
