@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Hire or Fire? — Studente</title>
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=13">
 <!-- Layout cellulare: tutto in una schermata, senza scorrere (v2) -->
 <style>
 body.voting{ overflow:hidden; }
@@ -21,10 +21,10 @@ body.voting .footer-note{ display:none; }
 
 body.voting #voteScreen{ flex:1; min-height:0; display:flex !important; flex-direction:column; }
 body.voting .folder-tab{ flex-shrink:0; padding:4px 4px 6px; font-size:10.5px; }
-body.voting .folder{ flex:1; min-height:0; display:flex; flex-direction:column; border-radius:14px; }
+body.voting .folder{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; border-radius:14px; }
 
-body.voting .photo-wrap{ flex:1; min-height:110px; overflow:hidden; cursor:zoom-in; }
-body.voting .photo-wrap img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+body.voting .photo-wrap{ flex:1 1 auto; min-height:140px; overflow:hidden; cursor:zoom-in; }
+body.voting .photo-wrap img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 25%; }
 .zoom-hint{
   position:absolute; right:6px; top:6px; z-index:4;
   background:rgba(6,18,27,.7); color:#fff; font-family:var(--mono); letter-spacing:.04em;
@@ -32,13 +32,40 @@ body.voting .photo-wrap img{ position:absolute; inset:0; width:100%; height:100%
   pointer-events:none;
 }
 
+/* Riquadro nome/ruolo/pulsanti: misura fissa subito sopra i tasti di voto;
+   la foto si adatta allo spazio che resta, così non avanza spazio vuoto */
 body.voting .dossier-body{
-  flex:0 1 auto; max-height:34%; overflow-y:auto;
-  padding:7px 11px 9px; -webkit-overflow-scrolling:touch;
+  flex:0 0 auto; padding:12px 14px 14px;
 }
 body.voting .field{ margin-bottom:5px; }
 body.voting .field .label{ font-size:9.5px; margin-bottom:1px; }
 body.voting .field .value{ font-size:13px; line-height:1.3; }
+body.voting .phone-name{ font-weight:900; font-size:24px; line-height:1.15; margin-bottom:8px; }
+body.voting .field{ margin-bottom:8px; }
+body.voting .field .label{ font-size:11px; margin-bottom:2px; }
+body.voting .field .value{ font-size:19px; line-height:1.25; }
+.phone-hint{ font-size:13px; color:var(--ink-soft); margin-top:2px; }
+.read-row{ display:flex; gap:10px; margin-top:12px; }
+.read-btn{
+  flex:1; border:1px solid var(--paper-line); background:rgba(31,181,234,.08); color:var(--brand);
+  border-radius:999px; padding:11px 8px; font-family:'Roboto',sans-serif; font-weight:700; font-size:15px; cursor:pointer;
+}
+.read-btn.hr{ color:#ffc440; border-color:rgba(255,196,64,.4); background:rgba(255,196,64,.08); }
+.reader{
+  position:fixed; inset:0; z-index:60; background:var(--page-bg);
+  display:none; flex-direction:column;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 18px calc(16px + env(safe-area-inset-bottom,0px));
+}
+.reader.show{ display:flex; }
+.reader-title{ font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--brand); }
+.reader.hr .reader-title{ color:#ffc440; }
+.reader-who{ font-weight:900; font-size:22px; margin:6px 0 14px; }
+.reader-text{
+  flex:1; overflow-y:auto; font-size:18px; line-height:1.6; color:#eaf3f8;
+  background:rgba(31,181,234,.08); border-left:4px solid var(--brand); border-radius:12px; padding:16px;
+}
+.reader.hr .reader-text{ background:rgba(255,196,64,.07); border-left-color:#ffc440; }
+.reader .control-btn{ margin-top:14px; width:100%; }
 body.voting .quote-block{ padding:6px 9px; margin-top:2px; }
 body.voting .quote-block .label{ font-size:9.5px; }
 body.voting .quote-block p{ font-size:12px; line-height:1.4; margin-top:2px; }
@@ -55,7 +82,9 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
 /* Schermi molto bassi (es. telefono in orizzontale): testo ancora più compatto */
 @media (max-height:600px){
   body.voting .brand{ display:none; }
-  body.voting .dossier-body{ max-height:30%; }
+  body.voting .phone-name{ font-size:20px; margin-bottom:4px; }
+  .read-row{ margin-top:8px; }
+  .read-btn{ padding:8px; font-size:13.5px; }
   body.voting .quote-block p{ font-size:11.5px; }
 }
 
@@ -89,16 +118,16 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
       <input id="roomInput" type="text" maxlength="5" placeholder="es. TRK4G" autocomplete="off" style="text-transform:uppercase; letter-spacing:.1em; text-align:center; ">
     </div>
     <p id="prefilledRoomHint" style="display:none; font-size:12px; color:var(--brand-dark); margin-top:-6px; margin-bottom:16px;">Stanza <b id="prefilledRoomCode"></b> — scansionata dal QR code</p>
-    <label for="nameInput">Il tuo nome (facoltativo, resta anonimo se lo lasci vuoto)</label>
-    <input id="nameInput" type="text" maxlength="24" placeholder="Nickname" autocomplete="off">
+    <label for="nameInput">Il tuo nickname (comparirà in classifica)</label>
+    <input id="nameInput" type="text" maxlength="16" placeholder="Nickname" autocomplete="off">
     <button class="control-btn primary" style="width:100%;" onclick="joinRoom()">Entra nella stanza</button>
     <p id="joinError" style="color:var(--reject); font-size:12px; margin-top:12px; display:none;"></p>
   </div>
 
   <!-- SCHERMATA 1bis: in attesa che il docente avvii il gioco -->
   <div id="waitingStartScreen" style="display:none;" class="status-panel">
-    <div class="big">Sei connesso alla stanza <span id="waitingRoomLabel"></span></div>
-    In attesa che il docente avvii il gioco…
+    <div class="big">Ci sei, <span id="waitingName"></span>! 🎉</div>
+    Stanza <b id="waitingRoomLabel"></b> — guarda il monitor:<br>il gioco sta per iniziare…
   </div>
 
   <!-- SCHERMATA 2: votazione -->
@@ -117,13 +146,15 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
         </div>
       </div>
       <div class="dossier-body">
+        <div class="phone-name" id="cardName"></div>
         <div class="field">
-          <span class="label">Posizione desiderata</span>
+          <span class="label">Si candida per</span>
           <span class="value" id="cardPosition"></span>
         </div>
-        <div class="quote-block">
-          <span class="label" id="cardQuoteLabel"></span>
-          <p id="cardQuote"></p>
+        <div class="phone-hint">👀 Leggi email e note HR: premi i pulsanti sotto</div>
+        <div class="read-row">
+          <button class="read-btn" onclick="openReader('email')">📩 Email</button>
+          <button class="read-btn hr" onclick="openReader('hr')">📋 Note HR</button>
         </div>
       </div>
     </div>
@@ -134,21 +165,38 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
     </div>
 
     <div id="waitStatus" class="status-panel" style="display:none;">
-      <div class="big">Voto registrato</div>
-      In attesa del prossimo fascicolo, tenuto dal docente…
+      <div class="big">Risposta inviata ✔</div>
+      Guarda il monitor: aspettiamo gli altri…
+    </div>
+
+    <div id="outcomeStatus" class="outcome-panel" style="display:none;">
+      <div class="outcome-big" id="outcomeBig"></div>
+      <div class="outcome-small" id="outcomeSmall"></div>
     </div>
   </div>
 
   <!-- SCHERMATA 3: risultati finali -->
   <div id="resultsScreen" style="display:none;">
-    <div class="status-panel"><div class="big">Discussione finale</div>Ecco come ha votato tutta la classe:</div>
-    <div id="resultsList" class="results-list"></div>
+    <div class="status-panel">
+      <div class="big" id="finalRank"></div>
+      <span id="finalScore"></span>
+    </div>
+    <div class="mini-board-title">Classifica</div>
+    <div id="finalBoard" class="board"></div>
   </div>
 
   <div class="footer-note"><span>&gt; versione mobile 3</span><img class="claim" src="img/claim-people-bianco.png" alt="people. our passion"></div>
 </div>
 
 <!-- Foto a schermo intero -->
+<!-- Email / Note HR a pagina intera -->
+<div class="reader" id="reader">
+  <div class="reader-title" id="readerTitle"></div>
+  <div class="reader-who" id="readerWho"></div>
+  <div class="reader-text" id="readerText"></div>
+  <button class="control-btn primary" onclick="closeReader()">✕ Chiudi e torna a votare</button>
+</div>
+
 <div class="lightbox" id="lightbox" onclick="closeZoom()">
   <img id="lightboxImg" src="" alt="">
   <span class="close-hint">✕ Chiudi</span>
@@ -157,92 +205,142 @@ body.voting .stamp-mark{ font-size:26px; padding:6px 18px; border-width:4px; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="cards-data.js"></script>
+<script src="cards-data.js?v=3"></script>
+<script src="gioco.js?v=2"></script>
 <script>
 let ROOM = null;
+
+// ANTEPRIMA: ?anteprima=N mostra il candidato N con dati finti, senza usare il database.
+// &fase=reveal mostra la risposta svelata.
+const PREVIEW_PARAMS = new URLSearchParams(location.search);
+const PREVIEW = PREVIEW_PARAMS.has('anteprima');
+function demoData(){
+  const i = Math.max(0, Math.min(CARDS.length - 1, parseInt(PREVIEW_PARAMS.get('anteprima'), 10) || 0));
+  const ans = CARDS[i].answer, wrong = ans === 'match' ? 'skip' : 'match';
+  const reveal = PREVIEW_PARAMS.get('fase') === 'reveal';
+  const votes = { demo_b: wrong, demo_c: ans, demo_d: ans };
+  if (reveal) votes.demo_a = ans; // "Giulia" (il telefono in anteprima) risponde solo nella vista svelata
+  return {
+    phase: reveal ? 'reveal' : 'question',
+    currentIndex: i,
+    cardOrder: CARDS.map((_, k) => k),
+    students: { demo_a: 'Giulia', demo_b: 'Marco', demo_c: 'Sara', demo_d: 'Luca', demo_e: 'Anna' },
+    votes: { [i]: votes }
+  };
+}
 let STUDENT_ID = localStorage.getItem('studentId');
 if (!STUDENT_ID) {
   STUDENT_ID = 'stu_' + Math.random().toString(36).slice(2, 10);
   localStorage.setItem('studentId', STUDENT_ID);
 }
 
+let DATA = null;
 let currentIndex = null;
 let votedForCurrentIndex = false;
-let CARD_ORDER = CARDS.map((_, i) => i); // ordine di default, sovrascritto dalla stanza
+
+function $(id){ return document.getElementById(id); }
+
+// Ricorda il nickname, così se il telefono ricarica la pagina basta ripremere "Entra"
+$('nameInput').value = localStorage.getItem('hofNickname') || '';
 
 // Se il QR code contiene già il codice stanza (?room=XXXXX), nascondiamo
 // il campo "codice stanza" e chiediamo solo il nickname.
 const urlParams = new URLSearchParams(window.location.search);
 const prefilledRoom = urlParams.get('room') ? urlParams.get('room').toUpperCase() : null;
 if (prefilledRoom) {
-  document.getElementById('roomFieldWrap').style.display = 'none';
-  document.getElementById('prefilledRoomHint').style.display = 'block';
-  document.getElementById('prefilledRoomCode').textContent = prefilledRoom;
+  $('roomFieldWrap').style.display = 'none';
+  $('prefilledRoomHint').style.display = 'block';
+  $('prefilledRoomCode').textContent = prefilledRoom;
+}
+
+function showError(msg){
+  const errEl = $('joinError');
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
 }
 
 function joinRoom(){
-  const code = prefilledRoom || document.getElementById('roomInput').value.trim().toUpperCase();
-  const name = document.getElementById('nameInput').value.trim();
-  const errEl = document.getElementById('joinError');
-  errEl.style.display = 'none';
+  const code = prefilledRoom || $('roomInput').value.trim().toUpperCase();
+  const name = $('nameInput').value.trim();
+  $('joinError').style.display = 'none';
 
-  if (!code) {
-    errEl.textContent = 'Inserisci il codice stanza fornito dal docente.';
-    errEl.style.display = 'block';
+  if (!code) return showError('Inserisci il codice stanza che vedi sul monitor.');
+  if (!name) return showError('Scrivi un nickname: serve per la classifica.');
+
+  db.ref('sessions/' + code + '/meta').once('value').then(snap => {
+    if (!snap.exists()) return showError('Nessuna stanza trovata con questo codice. Controlla sul monitor.');
+    ROOM = code;
+    localStorage.setItem('hofNickname', name);
+    $('roomLabel').textContent = ROOM;
+    $('waitingRoomLabel').textContent = ROOM;
+    $('waitingName').textContent = name;
+    db.ref(`sessions/${ROOM}/students/${STUDENT_ID}`).set(name);
+    $('joinScreen').style.display = 'none';
+    preloadImages();
+    db.ref('sessions/' + ROOM).on('value', s => {
+      DATA = s.val();
+      if (DATA) render();
+    });
+  }).catch(e => showError('Errore di connessione: ' + e.message));
+}
+
+function render(){
+  const phase = DATA.phase || 'lobby';
+
+  if (phase === 'final') return showFinal();
+
+  if (phase === 'lobby') {
+    setVotingLayout(false);
+    currentIndex = null;
+    $('waitingStartScreen').style.display = 'block';
+    $('voteScreen').style.display = 'none';
+    $('resultsScreen').style.display = 'none';
     return;
   }
 
-  db.ref('sessions/' + code + '/meta').once('value').then(snap => {
-    if (!snap.exists()) {
-      errEl.textContent = 'Nessuna stanza trovata con questo codice. Controlla con il docente.';
-      errEl.style.display = 'block';
-      return;
-    }
-    ROOM = code;
-    document.getElementById('roomLabel').textContent = ROOM;
-    document.getElementById('waitingRoomLabel').textContent = ROOM;
-    if (name) db.ref(`sessions/${ROOM}/students/${STUDENT_ID}`).set(name);
-    db.ref(`sessions/${ROOM}/cardOrder`).once('value').then(snap => {
-      if (snap.exists()) CARD_ORDER = snap.val();
-    });
-    document.getElementById('joinScreen').style.display = 'none';
-    document.getElementById('waitingStartScreen').style.display = 'block';
-    preloadImages();
-    listenToRoom();
-  }).catch(e => {
-    errEl.textContent = 'Errore di connessione: ' + e.message;
-    errEl.style.display = 'block';
-  });
+  const idx = DATA.currentIndex || 0;
+  if (idx !== currentIndex) {
+    currentIndex = idx;
+    renderCard(idx);
+  }
+
+  const myVote = votesAt(DATA, idx)[STUDENT_ID];
+  votedForCurrentIndex = !!myVote;
+  setButtonsEnabled(phase === 'question' && !myVote);
+
+  if (phase === 'question') {
+    showPanel(myVote ? 'wait' : 'actions');
+    return;
+  }
+
+  // phase === 'reveal': com'è andata?
+  closeReader();
+  const card = cardAt(DATA, idx);
+  const board = computeLeaderboard(DATA);
+  const me = board.find(r => r.id === STUDENT_ID);
+  const rank = rankOf(board, STUDENT_ID);
+  const panel = $('outcomeStatus');
+  if (!myVote) {
+    panel.className = 'outcome-panel none';
+    $('outcomeBig').textContent = '⏱ Non hai risposto';
+  } else if (myVote === card.answer) {
+    panel.className = 'outcome-panel ok';
+    $('outcomeBig').textContent = '✅ Giusto! +1';
+  } else {
+    panel.className = 'outcome-panel ko';
+    $('outcomeBig').textContent = '❌ Sbagliato';
+  }
+  $('outcomeSmall').innerHTML =
+    `Era <b>${escapeHtml(card.name)}</b> · risposta giusta: ${answerLabel(card.answer)}<br>` +
+    (me ? `Hai <b>${me.score}</b> punti · sei <b>${rank}°</b> su ${board.length}` : '');
+  showPanel('outcome');
 }
 
-function listenToRoom(){
-  const sessionRef = db.ref('sessions/' + ROOM);
-
-  sessionRef.on('value', snap => {
-    const data = snap.val();
-    if (!data) return;
-
-    if (data.revealed) {
-      showResults(data.votes || {});
-      return;
-    }
-
-    if (!data.started) {
-      setVotingLayout(false);
-      currentIndex = null;
-      document.getElementById('waitingStartScreen').style.display = 'block';
-      document.getElementById('voteScreen').style.display = 'none';
-      document.getElementById('resultsScreen').style.display = 'none';
-      return;
-    }
-
-    const idx = data.currentIndex || 0;
-    if (idx !== currentIndex) {
-      currentIndex = idx;
-      renderCard(idx);
-      checkIfAlreadyVoted(idx);
-    }
-  });
+// Al posto dei pulsanti mostra: i pulsanti, "risposta inviata" oppure l'esito
+function showPanel(which){
+  $('actionsBar').style.display = which === 'actions' ? 'flex' : 'none';
+  $('waitStatus').style.display = which === 'wait' ? 'block' : 'none';
+  $('outcomeStatus').style.display = which === 'outcome' ? 'block' : 'none';
 }
 
 function setVotingLayout(on){
@@ -251,111 +349,96 @@ function setVotingLayout(on){
 }
 
 function openZoom(){
-  const src = document.getElementById('cardImg').src;
+  const src = $('cardImg').src;
   if (!src) return;
-  document.getElementById('lightboxImg').src = src;
-  document.getElementById('lightbox').classList.add('show');
+  $('lightboxImg').src = src;
+  $('lightbox').classList.add('show');
 }
+// Sul telefono usiamo la foto senza i testi (cartella img/telefono)
+function phoneImg(card){ return cleanImg(card); }
+
+function openReader(which){
+  if (currentIndex === null || !DATA) return;
+  const card = cardAt(DATA, currentIndex);
+  const isHr = which === 'hr';
+  $('reader').className = 'reader show' + (isHr ? ' hr' : '');
+  $('readerTitle').textContent = isHr ? '📋 Note della HR Recruiter' : '📩 Email di presentazione';
+  $('readerWho').textContent = `${card.name}, ${card.age} anni`;
+  $('readerText').textContent = isHr ? card.valutazione : card.presentazione;
+}
+function closeReader(){
+  $('reader').classList.remove('show');
+}
+
 function closeZoom(){
-  document.getElementById('lightbox').classList.remove('show');
+  $('lightbox').classList.remove('show');
 }
 
-// Mostra il messaggio "Voto registrato" al posto dei pulsanti,
-// così resta tutto visibile senza scorrere.
-function showWaiting(on){
-  document.getElementById('waitStatus').style.display = on ? 'block' : 'none';
-  document.getElementById('actionsBar').style.display = on ? 'none' : 'flex';
-}
-
-// Scarica in anticipo tutte le foto, così i fascicoli compaiono subito sul telefono
+// Scarica in anticipo tutte le foto, così i profili compaiono subito sul telefono
 function preloadImages(){
-  CARDS.forEach(c => { const i = new Image(); i.src = c.img; });
+  CARDS.forEach(c => { const i = new Image(); i.src = phoneImg(c); });
 }
 
 function renderCard(idx){
   setVotingLayout(true);
-  const card = CARDS[CARD_ORDER[idx]];
-  document.getElementById('waitingStartScreen').style.display = 'none';
-  document.getElementById('resultsScreen').style.display = 'none';
-  document.getElementById('voteScreen').style.display = 'block';
-  document.getElementById('cardProgress').textContent = `FASCICOLO ${idx+1}/${CARDS.length}`;
-  document.getElementById('cardImg').src = card.img;
-  document.getElementById('cardPosition').textContent = card.position;
-  document.getElementById('cardQuoteLabel').textContent = card.quoteLabel;
-  document.getElementById('cardQuote').textContent = card.quote;
-  document.getElementById('cardImg').alt = card.position;
-  document.getElementById('stampOverlay').classList.remove('show');
-  showWaiting(false);
+  const card = cardAt(DATA, idx);
+  $('waitingStartScreen').style.display = 'none';
+  $('resultsScreen').style.display = 'none';
+  $('voteScreen').style.display = 'block';
+  $('cardProgress').textContent = `PROFILO ${idx+1}/${CARDS.length}`;
+  $('cardImg').src = phoneImg(card);
+  $('cardPosition').textContent = card.position;
+  $('cardName').textContent = `${card.name}, ${card.age} anni`;
+  $('cardImg').alt = card.position;
+  $('stampOverlay').classList.remove('show');
   closeZoom();
-  setButtonsEnabled(true);
-}
-
-function checkIfAlreadyVoted(idx){
-  db.ref(`sessions/${ROOM}/votes/${idx}/${STUDENT_ID}`).once('value').then(snap => {
-    if (snap.exists()) {
-      votedForCurrentIndex = true;
-      setButtonsEnabled(false);
-      showWaiting(true);
-    } else {
-      votedForCurrentIndex = false;
-    }
-  });
+  closeReader();
 }
 
 function setButtonsEnabled(enabled){
-  document.getElementById('skipBtn').disabled = !enabled;
-  document.getElementById('matchBtn').disabled = !enabled;
+  $('skipBtn').disabled = !enabled;
+  $('matchBtn').disabled = !enabled;
 }
 
 function vote(choice){
-  if (votedForCurrentIndex || currentIndex === null) return;
+  if (PREVIEW) return;
+  if (votedForCurrentIndex || currentIndex === null || !DATA || DATA.phase !== 'question') return;
   votedForCurrentIndex = true;
   setButtonsEnabled(false);
 
   db.ref(`sessions/${ROOM}/votes/${currentIndex}/${STUDENT_ID}`).set(choice);
 
-  const overlay = document.getElementById('stampOverlay');
-  const mark = document.getElementById('stampMark');
+  const overlay = $('stampOverlay');
+  const mark = $('stampMark');
   mark.textContent = choice === 'match' ? 'MATCH ♥' : 'SKIP ✕';
   mark.className = 'stamp-mark ' + (choice === 'match' ? 'approve' : 'reject');
   overlay.classList.add('show');
-
-  setTimeout(() => showWaiting(true), 500);
 }
 
-function showResults(votesData){
+function showFinal(){
   setVotingLayout(false);
-  document.getElementById('voteScreen').style.display = 'none';
-  document.getElementById('resultsScreen').style.display = 'block';
-  const list = document.getElementById('resultsList');
-  list.innerHTML = '';
-
-  CARD_ORDER.forEach((cardIdx, position) => {
-    const card = CARDS[cardIdx];
-    const votes = votesData[position] ? Object.values(votesData[position]) : [];
-    const matchCount = votes.filter(v => v === 'match').length;
-    const skipCount = votes.filter(v => v === 'skip').length;
-    const total = matchCount + skipCount;
-    const matchPct = total ? Math.round((matchCount/total)*100) : 0;
-    const skipPct = total ? 100 - matchPct : 0;
-
-    const row = document.createElement('div');
-    row.className = 'result-row';
-    row.innerHTML = `
-      <div class="rr-head">
-        <span>${card.name}</span>
-        <span class="rr-total">${total} voti</span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-match" style="width:${matchPct}%"></div>
-        <div class="bar-skip" style="width:${skipPct}%"></div>
-      </div>
-      <div class="bar-labels">
-        <span>♥ MATCH ${matchPct}% (${matchCount})</span>
-        <span>SKIP ${skipPct}% (${skipCount}) ✕</span>
-      </div>`;
-    list.appendChild(row);
-  });
+  $('waitingStartScreen').style.display = 'none';
+  $('voteScreen').style.display = 'none';
+  $('resultsScreen').style.display = 'block';
+  const board = computeLeaderboard(DATA);
+  const me = board.find(r => r.id === STUDENT_ID);
+  const rank = rankOf(board, STUDENT_ID);
+  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+  $('finalRank').textContent = me ? `${medals[rank] || '🏁'} Sei ${rank}° su ${board.length}` : 'Classifica finale';
+  $('finalScore').innerHTML = me ? `con <b>${me.score}</b> risposte giuste su ${CARDS.length}` : '';
+  $('finalBoard').innerHTML = board.slice(0, 10).map(r => `
+    <div class="board-row${r.id === STUDENT_ID ? ' me' : ''}">
+      <span class="board-rank">${rankOf(board, r.id)}°</span>
+      <span class="board-name">${escapeHtml(r.name)}</span>
+      <span class="board-score">${r.score} pt</span>
+    </div>`).join('');
+}
+if (PREVIEW){
+  STUDENT_ID = 'demo_a'; // in anteprima siamo "Giulia", che risponde giusto
+  DATA = demoData();
+  $('joinScreen').style.display = 'none';
+  $('roomLabel').textContent = 'DEMO';
+  render();
 }
 </script>
 </body>
